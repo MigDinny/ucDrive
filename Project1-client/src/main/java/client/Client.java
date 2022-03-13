@@ -17,7 +17,8 @@ import java.io.FileFilter;
  */
 public class Client {
 
-    private static int serversocket = 6000;
+    private static int serversocket;
+    private static int serversocket2;
     private static DataInputStream in;
     private static DataOutputStream out;
     private static String username;
@@ -220,10 +221,19 @@ public class Client {
 
     public static void main(String[] args) {
 
-        if (args.length == 0) {
-            System.out.println("java client hostname");
+        if (args.length != 4) {
+            System.out.println("java client hostname port1 hostname2 port2");
             System.exit(0);
         }
+        
+        try{
+            serversocket = Integer.parseInt(args[1]);
+            serversocket2 = Integer.parseInt(args[3]);
+        }catch(Exception e){
+            System.out.println("java client hostname port1 hostname2 port2");
+        }
+        
+        
 
         try ( Socket s = new Socket(args[0], serversocket)) {
             
