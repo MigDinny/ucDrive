@@ -41,9 +41,6 @@ class ConfFile {
             
             user_list = (JSONArray) obj;
             
-            //Iterate over employee array
-            
-            System.out.println(user_list);
             
  
         } catch (FileNotFoundException e) {
@@ -107,9 +104,6 @@ class ConfFile {
     synchronized void updatePassword(String username, String new_password){
         for(int i = 0; i < user_list.size(); i++ ){
             JSONObject user = (JSONObject) user_list.get(i);
-            System.out.println(user.get("username"));
-
-            System.out.println(username);
 
             if(user.get("username").equals(username)){
                 user.put("password", new_password); 

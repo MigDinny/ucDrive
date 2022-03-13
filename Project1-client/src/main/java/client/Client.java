@@ -55,6 +55,9 @@ public class Client {
                     System.out.println("You are now authenticated");
                     break;
                 }
+                else{
+                    System.out.println("Username is already taken");
+                }
                 
                 
                 
