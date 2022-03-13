@@ -1,17 +1,7 @@
-- client clica download
+TODO
 
-- server recebe pedido de download (com nome ficheiro)
-	verifica existencia ficheiro, guarda num objeto
-	abre connection para receber pedido
-	dá luz verde
-
-- client recebe luz verde (ou não) e conecta-se ao outro localhost:7000
-- client fica à espera do file
-
-- server ao receber conn, envia file dá close()
-
-- client recebe ficheiro e dá save(), e fecha socket
-
+1 - fazer o mesmo para upload
+2 - tratar de meter current DIRECTORY em todo lado necessário
 
 
 
