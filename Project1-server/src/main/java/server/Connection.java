@@ -1,10 +1,14 @@
 package server;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Stack;
@@ -28,6 +32,7 @@ class Connection extends Thread {
         try {
 
             this.client_socket = client_socket;
+            
             this.in = new DataInputStream(client_socket.getInputStream());
             this.out = new DataOutputStream(client_socket.getOutputStream());
             this.thread_number = n_thread;
@@ -52,11 +57,21 @@ class Connection extends Thread {
         }
     }
     
+    private void reply(boolean b) {
+        try {
+            out.writeBoolean(b);
+            out.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     private String joinPath(Stack<String> s) {
         String path = homeDir + "/";
         
         for (String f : s) {
-            path += "/" + f;
+            path = path.concat(f);
+            path = path.concat("/");
         }
         
         return path;
@@ -133,13 +148,19 @@ class Connection extends Thread {
     public void changeDir() {
         String newFolder = data_arr[1];
         
-        if (newFolder.equals(".."))
+        System.out.println("change dir: " + newFolder);
+        
+        if (newFolder.equals("..")) {
             if (!this.path.empty()) this.path.pop();
-        else 
+        } else {
             this.path.push(newFolder);
+        }
        
+        System.out.println(joinPath(this.path));
         
         this.currentDir = new File(joinPath(this.path));
+        
+        System.out.println(this.currentDir.getAbsolutePath());
         
         // if new directory doesn't exist, create it anyways
         this.currentDir.mkdir();
@@ -147,7 +168,39 @@ class Connection extends Thread {
 
     //Sends to the client's directory a file that is currently in the server's directory
     public void getServerFile() {
-        return;
+        String filename = data_arr[1];
+        
+        File f = new File(joinPath(this.path) + filename);
+        
+        if (!f.exists()) {
+            reply(false);
+            return;
+        }
+        
+        
+        try (ServerSocket listenSocket = new ServerSocket(7000)) {
+            
+            reply(true); // green light 
+            
+            Socket fileTransferSocket = listenSocket.accept();
+                        
+            // send file over above socket
+            byte[] buffer = new byte[(int) f.length()];   
+            
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
+            bis.read(buffer, 0, buffer.length);
+            
+            OutputStream os = fileTransferSocket.getOutputStream();
+            os.write(buffer, 0, buffer.length);
+            
+            os.flush();
+            
+            fileTransferSocket.close();
+
+        } catch (IOException e) {
+            System.out.println("Listen:" + e.getMessage());
+            reply(false);
+        }
     }
 
     /*
@@ -189,6 +242,7 @@ class Connection extends Thread {
         return true;
     }
 
+    @Override
     public void run() {
         String response;
         try {

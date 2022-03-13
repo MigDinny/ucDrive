@@ -1,5 +1,6 @@
 package client;
 
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -9,6 +10,8 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 /**
  *
@@ -161,9 +164,9 @@ public class Client {
     public static void downloadFileServer() {
         try {
             System.out.println("File to download: ");
-            String file_name = sc.nextLine();
+            String filename = sc.nextLine();
 
-            String message = "6-" + file_name;
+            String message = "6-" + filename;
             out.writeUTF(message);
 
             boolean response = in.readBoolean();
@@ -171,7 +174,27 @@ public class Client {
             if (response) {
                 try ( Socket s2 = new Socket(host1, 7000)) {
                     
-                    //HERE CODE MIJEL
+                    // expect a file here, read and save
+                    
+                    byte[] buffer = new byte[8192]; 
+                    
+                    InputStream is = s2.getInputStream();
+                    
+                    FileOutputStream fos = new FileOutputStream(current_dir + "/" + filename);
+                    BufferedOutputStream bos = new BufferedOutputStream(fos);
+                    
+                    int bytesRead = is.read(buffer, 0, buffer.length);
+                    
+                    while (bytesRead != -1) {
+                        //System.out.println("Bytes read: " + bytesRead);
+                        bos.write(buffer, 0, bytesRead);
+                        bos.flush();
+                        bytesRead = is.read(buffer, 0, buffer.length);
+                    }
+
+                    bos.close();
+                    s2.close();
+                    
 
                 } catch (UnknownHostException e) {
                     System.out.println("Sock:" + e.getMessage());
