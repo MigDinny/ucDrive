@@ -6,8 +6,6 @@ package server;
  * @author Miguel Dinis
  */
 
-//package project1;
-
 
 
 import java.io.DataInputStream;
@@ -36,7 +34,7 @@ class ConfFile {
     public ConfFile(){
         JSONParser jsonParser = new JSONParser();
         
-        try (FileReader reader = new FileReader("src\\project1\\conf.json"))
+        try (FileReader reader = new FileReader("conf.json"))
         {
             //Read JSON file
             Object obj = jsonParser.parse(reader);
@@ -44,6 +42,8 @@ class ConfFile {
             user_list = (JSONArray) obj;
             
             //Iterate over employee array
+            
+            System.out.println(user_list);
             
  
         } catch (FileNotFoundException e) {
@@ -120,7 +120,7 @@ class ConfFile {
     }
     
     synchronized void writeToFile(){
-        try (FileWriter file = new FileWriter("src\\project1\\conf.json")) {
+        try (FileWriter file = new FileWriter("conf.json")) {
             //We can write any JSONArray or JSONObject instance to the file
             file.write(user_list.toJSONString()); 
             file.flush();

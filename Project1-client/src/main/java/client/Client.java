@@ -1,12 +1,5 @@
 package client;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-//package project1;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -154,7 +147,7 @@ public class Client {
         
         
         if (args.length == 0) {
-			System.out.println("java TCPClient hostname");
+			System.out.println("java client hostname");
 			System.exit(0);
         }
         
