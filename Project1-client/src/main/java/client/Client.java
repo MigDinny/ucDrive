@@ -1,5 +1,6 @@
 package client;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,8 +11,10 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  *
@@ -24,7 +27,7 @@ public class Client {
     private static int serversocket2;
     private static String host1;
     private static String host2;
-    
+
     private static DataInputStream in;
     private static DataOutputStream out;
     private static String username;
@@ -144,6 +147,7 @@ public class Client {
 
             File past_dir = new File(current_dir);
             current_dir = past_dir.getParent();
+            System.out.println("In folder " + current_dir);
 
         } else {
 
@@ -173,18 +177,17 @@ public class Client {
 
             if (response) {
                 try ( Socket s2 = new Socket(host1, 7000)) {
-                    
+
                     // expect a file here, read and save
-                    
-                    byte[] buffer = new byte[8192]; 
-                    
+                    byte[] buffer = new byte[8192];
+
                     InputStream is = s2.getInputStream();
-                    
+
                     FileOutputStream fos = new FileOutputStream(current_dir + "/" + filename);
                     BufferedOutputStream bos = new BufferedOutputStream(fos);
-                    
+
                     int bytesRead = is.read(buffer, 0, buffer.length);
-                    
+
                     while (bytesRead != -1) {
                         //System.out.println("Bytes read: " + bytesRead);
                         bos.write(buffer, 0, bytesRead);
@@ -194,7 +197,6 @@ public class Client {
 
                     bos.close();
                     s2.close();
-                    
 
                 } catch (UnknownHostException e) {
                     System.out.println("Sock:" + e.getMessage());
@@ -205,6 +207,49 @@ public class Client {
                 }
             } else {
                 System.out.println("Connection refused or invalid file given");
+            }
+
+        } catch (IOException e) {
+            System.out.println("IO " + e);
+        }
+    }
+
+    public static void uploadFileServer() {
+        try {
+            System.out.println("File to upload: ");
+            String filename = sc.nextLine();
+
+            File f = new File(current_dir + "/" + filename);
+
+            if (!f.exists()) {
+                System.out.println("Given file does not exist");
+                return;
+            }
+
+            String message = "7-" + filename;
+            out.writeUTF(message);
+            
+            try ( Socket s2 = new Socket(host1, 7000)) {
+
+                // send file over above socket
+                byte[] buffer = new byte[(int) f.length()];
+
+                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
+                bis.read(buffer, 0, buffer.length);
+
+                OutputStream os = s2.getOutputStream();
+                os.write(buffer, 0, buffer.length);
+
+                os.flush();
+
+                s2.close();
+
+            } catch (UnknownHostException e) {
+                System.out.println("Sock:" + e.getMessage());
+            } catch (EOFException e) {
+                System.out.println("EOF:" + e.getMessage());
+            } catch (IOException e) {
+                System.out.println("IO:" + e.getMessage());
             }
 
         } catch (IOException e) {
@@ -253,6 +298,7 @@ public class Client {
                         downloadFileServer();
                         break;
                     case 8:
+                        uploadFileServer();
                         break;
                     case 9:
                         exit = true;
@@ -284,7 +330,7 @@ public class Client {
             serversocket = Integer.parseInt(args[1]);
             host2 = args[2];
             serversocket2 = Integer.parseInt(args[3]);
-            
+
         } catch (Exception e) {
             System.out.println("java client hostname port1 hostname2 port2");
         }
