@@ -1,0 +1,21 @@
+- client clica download
+
+- server recebe pedido de download (com nome ficheiro)
+	verifica existencia ficheiro, guarda num objeto
+	abre connection para receber pedido
+	dá luz verde
+
+- client recebe luz verde (ou não) e conecta-se ao outro localhost:7000
+- client fica à espera do file
+
+- server ao receber conn, envia file dá close()
+
+- client recebe ficheiro e dá save(), e fecha socket
+
+
+
+
+PERGUNTAS AO STOR:
+
+1 - como o client sabe a porta para fazer download? hardcoded? pede porta?
+2 - esclarecer comunicação UDP entre servers
