@@ -19,6 +19,9 @@ public class Client {
 
     private static int serversocket;
     private static int serversocket2;
+    private static String host1;
+    private static String host2;
+    
     private static DataInputStream in;
     private static DataOutputStream out;
     private static String username;
@@ -87,13 +90,13 @@ public class Client {
         try {
             String message = "4";
             out.writeUTF(message);
-            
+
             String response1 = in.readUTF();
             System.out.println("Dir: " + response1);
-            
+
             String response2 = in.readUTF();
             System.out.println(response2);
-            
+
         } catch (IOException e) {
             System.out.println("IO " + e);
         }
@@ -114,11 +117,11 @@ public class Client {
 
     //From https://stackoverflow.com/questions/5694385/getting-the-filenames-of-all-files-in-a-folder
     public static void listLocalFiles() {
-        
+
         System.out.println("CURRENT DIR     " + current_dir);
         File folder = new File(current_dir);
         File[] listOfFiles = folder.listFiles();
-        
+
         for (int i = 0; i < listOfFiles.length; i++) {
             if (listOfFiles[i].isFile()) {
                 System.out.println("File " + listOfFiles[i].getName());
@@ -130,34 +133,60 @@ public class Client {
     }
 
     public static void changeDirLocal() {
-        
+
         System.out.println("Select a dir to go to: ");
         String path = sc.nextLine();
-        
-        if(path.equals("..")){
-            
+
+        if (path.equals("..")) {
+
             File past_dir = new File(current_dir);
             current_dir = past_dir.getParent();
-            
-        }
-        else{
-            
+
+        } else {
+
             String temp = current_dir;
-            current_dir = current_dir + "\\" + path; 
-            
+            current_dir = current_dir + "\\" + path;
+
             File file = new File(current_dir);
-            if (!file.exists()){
+            if (!file.exists()) {
                 current_dir = temp;
                 System.out.println("Invalid folder");
-            }
-            else{
+            } else {
                 System.out.println("In folder " + current_dir);
             }
         }
-        
-        
-        
 
+    }
+
+    public static void downloadFileServer() {
+        try {
+            System.out.println("File to download: ");
+            String file_name = sc.nextLine();
+
+            String message = "6-" + file_name;
+            out.writeUTF(message);
+
+            boolean response = in.readBoolean();
+
+            if (response) {
+                try ( Socket s2 = new Socket(host1, 7000)) {
+                    
+                    //HERE CODE MIJEL
+
+                } catch (UnknownHostException e) {
+                    System.out.println("Sock:" + e.getMessage());
+                } catch (EOFException e) {
+                    System.out.println("EOF:" + e.getMessage());
+                } catch (IOException e) {
+                    System.out.println("IO:" + e.getMessage());
+                }
+            } else {
+                System.out.println("Connection refused or invalid file given");
+            }
+
+        } catch (IOException e) {
+            System.out.println("IO " + e);
+        }
     }
 
 //User picks next action
@@ -198,6 +227,7 @@ public class Client {
                         changeDirLocal();
                         break;
                     case 7:
+                        downloadFileServer();
                         break;
                     case 8:
                         break;
@@ -225,20 +255,21 @@ public class Client {
             System.out.println("java client hostname port1 hostname2 port2");
             System.exit(0);
         }
-        
-        try{
+
+        try {
+            host1 = args[0];
             serversocket = Integer.parseInt(args[1]);
+            host2 = args[2];
             serversocket2 = Integer.parseInt(args[3]);
-        }catch(Exception e){
+            
+        } catch (Exception e) {
             System.out.println("java client hostname port1 hostname2 port2");
         }
-        
-        
 
         try ( Socket s = new Socket(args[0], serversocket)) {
-            
+
             current_dir = System.getProperty("user.dir");
-            
+
             in = new DataInputStream(s.getInputStream());
             out = new DataOutputStream(s.getOutputStream());
 
