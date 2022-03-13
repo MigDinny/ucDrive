@@ -7,96 +7,163 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
+import java.io.File;
+import java.io.FileFilter;
 
 /**
  *
  * @author Edgar Duarte
  * @author Miguel Dinis
  */
-
-
-
-
 public class Client {
-    
+
     private static int serversocket = 6000;
     private static DataInputStream in;
     private static DataOutputStream out;
     private static String username;
     private static Scanner sc;
-    
-    
+    private static String current_dir;
+
     //Authenticates user
-    public static void auth(){
-        
-        
-        while(true){
-            try{
+    public static void auth() {
+
+        while (true) {
+            try {
                 System.out.println("0-Login | 1-Sign up");
                 String mode = sc.nextLine();
 
-                if(Integer.parseInt(mode) != 0 && Integer.parseInt(mode) != 1){
-                    System.out.println("Please select a correct mode"); 
+                if (Integer.parseInt(mode) != 0 && Integer.parseInt(mode) != 1) {
+                    System.out.println("Please select a correct mode");
                     continue;
                 }
-                
+
                 System.out.println("Username");
                 username = sc.nextLine();
-                
+
                 System.out.println("Password");
                 String password = sc.nextLine();
-                
+
                 String message = "1-" + mode + "-" + username + "-" + password;
                 out.writeUTF(message);
-                
+
                 boolean success = in.readBoolean();
-                
-                if(success){
+
+                if (success) {
                     System.out.println("You are now authenticated");
                     break;
-                }
-                else{
+                } else {
                     System.out.println("Username is already taken");
                 }
-                
-                
-                
-                
-                
-            }catch (NumberFormatException e) {
+
+            } catch (NumberFormatException e) {
                 System.out.println("Please introduce correct input values");
-            }catch (IOException e){
+            } catch (IOException e) {
                 System.out.println("IO " + e);
-            }catch (Exception e){
+            } catch (Exception e) {
                 System.out.println("Something went wrong, please try again");
             }
         }
     }
-    
+
     //Lets user change password
     //TO-DO Desconetar o cliente e pedir nova autenticacao
-    public static void changePassword(){
-        
-        try{
+    public static void changePassword() {
+
+        try {
             System.out.println("New password: ");
             String password = sc.nextLine();
 
             String message = "2-" + username + "-" + password;
             out.writeUTF(message);
-        
-        }catch(IOException e){
+
+        } catch (IOException e) {
             System.out.println("IO " + e);
+        }
+
+    }
+
+    public static void listServerFiles() {
+        try {
+            String message = "4";
+            out.writeUTF(message);
+            
+            String response1 = in.readUTF();
+            System.out.println("Dir: " + response1);
+            
+            String response2 = in.readUTF();
+            System.out.println(response2);
+            
+        } catch (IOException e) {
+            System.out.println("IO " + e);
+        }
+    }
+
+    public static void changeDirServer() {
+        try {
+            System.out.println("Select a dir to go to: ");
+            String new_dir = sc.nextLine();
+
+            String message = "5-" + new_dir;
+            out.writeUTF(message);
+
+        } catch (IOException e) {
+            System.out.println("IO " + e);
+        }
+    }
+
+    //From https://stackoverflow.com/questions/5694385/getting-the-filenames-of-all-files-in-a-folder
+    public static void listLocalFiles() {
+        
+        System.out.println("CURRENT DIR     " + current_dir);
+        File folder = new File(current_dir);
+        File[] listOfFiles = folder.listFiles();
+        
+        for (int i = 0; i < listOfFiles.length; i++) {
+            if (listOfFiles[i].isFile()) {
+                System.out.println("File " + listOfFiles[i].getName());
+            } else if (listOfFiles[i].isDirectory()) {
+                System.out.println("Directory " + listOfFiles[i].getName());
+            }
+        }
+
+    }
+
+    public static void changeDirLocal() {
+        
+        System.out.println("Select a dir to go to: ");
+        String path = sc.nextLine();
+        
+        if(path.equals("..")){
+            
+            File past_dir = new File(current_dir);
+            current_dir = past_dir.getParent();
+            
+        }
+        else{
+            
+            String temp = current_dir;
+            current_dir = current_dir + "\\" + path; 
+            
+            File file = new File(current_dir);
+            if (!file.exists()){
+                current_dir = temp;
+                System.out.println("Invalid folder");
+            }
+            else{
+                System.out.println("In folder " + current_dir);
+            }
         }
         
         
         
+
     }
-    
-    //User picks next action
-    public static void menu(){
-        
-        while(true){
-            try{
+
+//User picks next action
+    public static void menu() {
+
+        while (true) {
+            try {
                 boolean exit = false;
                 System.out.println("What action do you want to perform:");
                 System.out.println("1- Change password");
@@ -108,22 +175,26 @@ public class Client {
                 System.out.println("7- Download server file");
                 System.out.println("8- Upload local file to server");
                 System.out.println("9- Exit app");
-                
+
                 int option = Integer.parseInt(sc.nextLine());
-                
-                switch(option){
+
+                switch (option) {
                     case 1:
                         changePassword();
                         break;
                     case 2:
                         break;
                     case 3:
+                        listServerFiles();
                         break;
                     case 4:
+                        listLocalFiles();
                         break;
                     case 5:
+                        changeDirServer();
                         break;
                     case 6:
+                        changeDirLocal();
                         break;
                     case 7:
                         break;
@@ -132,47 +203,48 @@ public class Client {
                     case 9:
                         exit = true;
                         break;
-                        
+
                     default:
                         System.out.println("Please input a correct value");
                 }
-                
-                if(exit) break;
-                
-            }catch (NumberFormatException e) {
+
+                if (exit) {
+                    break;
+                }
+
+            } catch (NumberFormatException e) {
                 System.out.println("Please introduce correct input values");
             }
         }
     }
-    
+
     public static void main(String[] args) {
 
-        
-        
         if (args.length == 0) {
-			System.out.println("java client hostname");
-			System.exit(0);
+            System.out.println("java client hostname");
+            System.exit(0);
         }
-        
-        
-        try (Socket s = new Socket(args[0], serversocket)) {
+
+        try ( Socket s = new Socket(args[0], serversocket)) {
+            
+            current_dir = System.getProperty("user.dir");
             
             in = new DataInputStream(s.getInputStream());
             out = new DataOutputStream(s.getOutputStream());
-            
+
             sc = new Scanner(System.in);
-            
+
             auth();
-            
+
             menu();
-			
-	} catch (UnknownHostException e) {
+
+        } catch (UnknownHostException e) {
             System.out.println("Sock:" + e.getMessage());
-	} catch (EOFException e) {
+        } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
-	} catch (IOException e) {
+        } catch (IOException e) {
             System.out.println("IO:" + e.getMessage());
-	}
-	
+        }
+
     }
 }
