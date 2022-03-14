@@ -228,7 +228,7 @@ public class Client {
 
             String message = "7-" + filename;
             out.writeUTF(message);
-            
+
             try ( Socket s2 = new Socket(host1, 7000)) {
 
                 // send file over above socket
@@ -257,51 +257,77 @@ public class Client {
         }
     }
 
+    public static void help() {
+        System.out.println("Help");
+        System.out.println("chg pass - Change password");
+        System.out.println("conf ports - Configure ports");
+        System.out.println("ls server - List files server side");
+        System.out.println("ls - List files client side");
+        System.out.println("5- Change server dir");
+        System.out.println("6- Change local dir");
+        System.out.println("7- Download server file");
+        System.out.println("8- Upload local file to server");
+        System.out.println("9- Exit app");
+    }
+
 //User picks next action
     public static void menu() {
 
         while (true) {
             try {
                 boolean exit = false;
-                System.out.println("What action do you want to perform:");
-                System.out.println("1- Change password");
-                System.out.println("2- Configure ports");
-                System.out.println("3- List files server side");
-                System.out.println("4- List files client side");
-                System.out.println("5- Change server dir");
-                System.out.println("6- Change local dir");
-                System.out.println("7- Download server file");
-                System.out.println("8- Upload local file to server");
-                System.out.println("9- Exit app");
 
-                int option = Integer.parseInt(sc.nextLine());
+                System.out.print(current_dir + ">");
+
+                String option = sc.nextLine();
 
                 switch (option) {
-                    case 1:
+                    case "help":
+                        help();
+                        break;
+
+                    case "chg pass":
                         changePassword();
                         break;
-                    case 2:
+                        
+                    case "conf ports":
                         break;
-                    case 3:
+                        
+                    case "ls server":
                         listServerFiles();
                         break;
-                    case 4:
+                        
+                    case "ls":
                         listLocalFiles();
                         break;
-                    case 5:
+                        
+                    case "cd server":
                         changeDirServer();
                         break;
-                    case 6:
+                        
+                    case "cd":
                         changeDirLocal();
                         break;
-                    case 7:
+                        
+                    case "dowload":
                         downloadFileServer();
                         break;
-                    case 8:
+                        
+                    case "upload":
                         uploadFileServer();
                         break;
-                    case 9:
+                        
+                    case "exit":
                         exit = true;
+
+                        try {
+                            String message = "8";
+                            out.writeUTF(message);
+
+                        } catch (IOException e) {
+                            System.out.println("IO " + e);
+                        }
+
                         break;
 
                     default:
@@ -323,6 +349,7 @@ public class Client {
         if (args.length != 4) {
             System.out.println("java client hostname port1 hostname2 port2");
             System.exit(0);
+            
         }
 
         try {
@@ -347,6 +374,8 @@ public class Client {
             auth();
 
             menu();
+
+            s.close();
 
         } catch (UnknownHostException e) {
             System.out.println("Sock:" + e.getMessage());
