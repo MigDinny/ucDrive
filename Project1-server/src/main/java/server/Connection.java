@@ -273,6 +273,10 @@ class Connection extends Thread {
                 case 7:
                     downloadClientFile();
                     break;
+                    
+                case 8:
+                    return false;
+                    
             }
         } catch (NumberFormatException e) {
             System.out.println("Something is wrong with incoming string. Thread ending");
@@ -291,6 +295,7 @@ class Connection extends Thread {
                 String data = in.readUTF();
 
                 if (!switcher(data)) {
+                    System.out.println("Client exited");
                     break;
                 }
             }
