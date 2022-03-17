@@ -53,16 +53,23 @@ public class Client {
                 System.out.println("Password");
                 String password = sc.nextLine();
 
-                String message = "1-" + mode + "-" + username + "-" + password;
+                current_dir = System.getProperty("user.dir");
+                String message = "1#" + mode + "#" + username + "#" + password + "#" + System.getProperty("user.dir");
                 out.writeUTF(message);
 
                 boolean success = in.readBoolean();
 
                 if (success) {
                     System.out.println("You are now authenticated");
+                    //Get last directory
+                    if (Integer.parseInt(mode) == 0) {
+
+                        current_dir = in.readUTF();
+
+                    }   
                     break;
                 } else {
-                    System.out.println("Username is already taken");
+                    System.out.println("Username is already taken or wrong password");
                 }
 
             } catch (NumberFormatException e) {
@@ -83,7 +90,7 @@ public class Client {
             System.out.println("New password: ");
             String password = sc.nextLine();
 
-            String message = "2-" + username + "-" + password;
+            String message = "2#" + username + "-" + password;
             out.writeUTF(message);
 
         } catch (IOException e) {
@@ -113,7 +120,7 @@ public class Client {
             System.out.println("Select a dir to go to: ");
             String new_dir = sc.nextLine();
 
-            String message = "5-" + new_dir;
+            String message = "5#" + new_dir;
             out.writeUTF(message);
 
         } catch (IOException e) {
@@ -149,6 +156,13 @@ public class Client {
             current_dir = past_dir.getParent();
             System.out.println("In folder " + current_dir);
 
+            try {
+                String message = "9#" + username + "#" + current_dir;
+                out.writeUTF(message);
+            } catch (IOException e) {
+                System.out.println("IO " + e);
+            }
+
         } else {
 
             String temp = current_dir;
@@ -159,6 +173,14 @@ public class Client {
                 current_dir = temp;
                 System.out.println("Invalid folder");
             } else {
+
+                try {
+                    String message = "9#" + username + "#" + current_dir;
+                    out.writeUTF(message);
+                } catch (IOException e) {
+                    System.out.println("IO " + e);
+                }
+
                 System.out.println("In folder " + current_dir);
             }
         }
@@ -226,7 +248,7 @@ public class Client {
                 return;
             }
 
-            String message = "7-" + filename;
+            String message = "7#" + filename;
             out.writeUTF(message);
 
             try ( Socket s2 = new Socket(host1, 7000)) {
@@ -258,16 +280,16 @@ public class Client {
     }
 
     public static void help() {
-        System.out.println("Help");
+        System.out.println("-----Help------");
         System.out.println("chg pass - Change password");
         System.out.println("conf ports - Configure ports");
         System.out.println("ls server - List files server side");
         System.out.println("ls - List files client side");
-        System.out.println("5- Change server dir");
-        System.out.println("6- Change local dir");
-        System.out.println("7- Download server file");
-        System.out.println("8- Upload local file to server");
-        System.out.println("9- Exit app");
+        System.out.println("cd server- Change server dir");
+        System.out.println("cd - Change local dir");
+        System.out.println("dowload - Download server file");
+        System.out.println("upload - Upload local file to server");
+        System.out.println("exit - Exit app");
     }
 
 //User picks next action
@@ -289,34 +311,34 @@ public class Client {
                     case "chg pass":
                         changePassword();
                         break;
-                        
+
                     case "conf ports":
                         break;
-                        
+
                     case "ls server":
                         listServerFiles();
                         break;
-                        
+
                     case "ls":
                         listLocalFiles();
                         break;
-                        
+
                     case "cd server":
                         changeDirServer();
                         break;
-                        
+
                     case "cd":
                         changeDirLocal();
                         break;
-                        
+
                     case "dowload":
                         downloadFileServer();
                         break;
-                        
+
                     case "upload":
                         uploadFileServer();
                         break;
-                        
+
                     case "exit":
                         exit = true;
 
@@ -349,7 +371,7 @@ public class Client {
         if (args.length != 4) {
             System.out.println("java client hostname port1 hostname2 port2");
             System.exit(0);
-            
+
         }
 
         try {

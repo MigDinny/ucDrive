@@ -59,7 +59,7 @@ class Config {
 
     //Adds user to configuration file
     //Returns false if a user with the same user name exists. Returns true if user was sucessfully added
-    synchronized boolean addUser(String username, String password) {
+    synchronized boolean addUser(String username, String password, String dir) {
         JSONObject json_user = new JSONObject();
 
         for (int i = 0; i < user_list.size(); i++) {
@@ -71,6 +71,7 @@ class Config {
 
         json_user.put("username", username);
         json_user.put("password", password);
+        json_user.put("dir", dir);
 
         user_list.add(json_user);
 
@@ -102,5 +103,30 @@ class Config {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    synchronized void changeDir(String username, String new_directory){
+        for (int i = 0; i < user_list.size(); i++){
+            JSONObject user = (JSONObject) user_list.get(i);
+            
+            if(user.get("username").equals(username)){
+                user.put("dir", new_directory);
+            }
+        }
+        writeToFile();
+    }
+    
+    
+    synchronized String getDir(String username){
+        for(int i = 0; i < user_list.size(); i++){
+            JSONObject user = (JSONObject) user_list.get(i);
+            
+            if(user.get("username").equals(username)){
+                return user.get("dir").toString();
+            }
+        }
+        
+        return "-1";
+        
     }
 }

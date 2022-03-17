@@ -92,11 +92,16 @@ class Connection extends Thread {
             if (Integer.parseInt(data_arr[1]) == 0) {
                 if (confF.auth(data_arr[2], data_arr[3])) {
                     out.writeBoolean(true);
+                    
+                    String dir = confF.getDir(data_arr[2]);
+                    out.writeUTF(dir);
+                    
+                    
                 } else {
                     out.writeBoolean(false);
                 }
             } else {
-                if (confF.addUser(data_arr[2], data_arr[3])) {
+                if (confF.addUser(data_arr[2], data_arr[3], data_arr[4])) {
                     out.writeBoolean(true);
                 } else {
                     out.writeBoolean(false);
@@ -120,7 +125,6 @@ class Connection extends Thread {
         data_arr[2] == password
      */
     public void changePassword() {
-        System.out.println("Here");
         confF.updatePassword(data_arr[1], data_arr[2]);
     }
 
@@ -206,6 +210,14 @@ class Connection extends Thread {
         }
     }
     
+    
+    public void changeClientDir(){
+        
+        confF.changeDir(data_arr[1], data_arr[2]);
+            
+        
+    }
+    
     public void downloadClientFile(){
         String filename = data_arr[1];
         
@@ -248,7 +260,7 @@ class Connection extends Thread {
     public boolean switcher(String data) {
 
         try {
-            data_arr = data.split("-");
+            data_arr = data.split("#");
 
             switch (Integer.parseInt(data_arr[0])) {
 
@@ -276,6 +288,10 @@ class Connection extends Thread {
                     
                 case 8:
                     return false;
+                    
+                case 9:
+                    changeClientDir();
+                    break;
                     
             }
         } catch (NumberFormatException e) {
