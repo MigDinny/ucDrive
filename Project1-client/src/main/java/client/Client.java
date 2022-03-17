@@ -287,7 +287,7 @@ public class Client {
         System.out.println("ls - List files client side");
         System.out.println("cd server- Change server dir");
         System.out.println("cd - Change local dir");
-        System.out.println("dowload - Download server file");
+        System.out.println("download - Download server file");
         System.out.println("upload - Upload local file to server");
         System.out.println("exit - Exit app");
     }
@@ -331,7 +331,7 @@ public class Client {
                         changeDirLocal();
                         break;
 
-                    case "dowload":
+                    case "download":
                         downloadFileServer();
                         break;
 
