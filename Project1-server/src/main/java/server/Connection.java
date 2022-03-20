@@ -43,6 +43,8 @@ class Connection extends Thread {
             this.homeDir = homeDir;
             this.path = new Stack<>();
             
+            
+            
             this.currentDir = new File(homeDir);
             
             this.start();

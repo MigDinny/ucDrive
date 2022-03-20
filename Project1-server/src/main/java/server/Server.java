@@ -9,38 +9,81 @@ import java.io.File;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 //Creates a connection for each client that tries to connect to the server
 public class Server {
 
-    private static int serverPort = 6000;
+    private static int serverPort = 6000; // primary server
+    private static int serverPortSecondary = 6001; // secondary server
+    private static int serverPortPing = 6002;
     private static String folderName = "home";
+    private static String folderNameSecondary = "home2";
+
+    public static DatagramSocket udpAnswerPing;
+    public static DatagramSocket udpSecondarySendPing;
 
     private static boolean init() {
-        
+
         File folder = new File(folderName);
         if (!folder.exists()) {
             if (folder.mkdir()) {
                 System.out.println("Folder " + folderName + " created.");
                 return true;
-            } else return false;
+            } else {
+                return false;
+            }
         }
-        
+
         return true;
     }
-    
-    public static void main(String[] args) {
 
-        if (!init()) {
-            System.err.println("Erro ao inicializar o servidor.");
+    private static void runPrimary() {
+
+        byte[] ping = {(byte) 0x1}; // 0x1 expected value on pings
+
+        // open UDP socket in order to answer pings. answer one ping before beginning running primary
+        // create thread to answer pings
+        try {
+
+            udpAnswerPing = new DatagramSocket(serverPortPing);
+
+            DatagramPacket incomingPing = new DatagramPacket(ping, ping.length);
+            udpAnswerPing.receive(incomingPing);
+
+            System.out.println("Primary received ping: " + Arrays.toString(incomingPing.getData()));
+
+            DatagramPacket reply = new DatagramPacket(incomingPing.getData(), incomingPing.getLength(), incomingPing.getAddress(), incomingPing.getPort());
+            udpAnswerPing.send(reply);
+
+        } catch (SocketException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException e) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
         }
         
+        // BEGIN @TODO create socket to send files to secondary server 
+        
+        
+        // END
 
+        new HeartbeatController(udpAnswerPing, serverPortPing);
+
+        // accept incoming connections and create threads for them
         int n_thread = 0;
 
         Config confF = new Config();
 
-        try (ServerSocket listenSocket = new ServerSocket(serverPort)) {
+        try ( ServerSocket listenSocket = new ServerSocket(serverPort)) {
 
             while (true) {
                 Socket clientSocket = listenSocket.accept();
@@ -50,6 +93,102 @@ public class Server {
 
         } catch (IOException e) {
             System.out.println("Listen:" + e.getMessage());
+        }
+
+    }
+    
+    private static void runPrimaryThroughSecondary() {
+        
+        // accept incoming connections and create threads for them
+        int n_thread = 0;
+
+        Config confF = new Config();
+
+        try ( ServerSocket listenSocket = new ServerSocket(serverPortSecondary)) {
+
+            while (true) {
+                Socket clientSocket = listenSocket.accept();
+                n_thread++;
+                new Connection(clientSocket, n_thread, confF, folderNameSecondary);
+            }
+
+        } catch (IOException e) {
+            System.out.println("Listen:" + e.getMessage());
+        }
+        
+    }
+
+    private static void runSecondary() throws InterruptedException, IOException {
+
+        byte[] ping = {(byte) 0x1}; // 0x1 expected value on pings
+        DatagramPacket pingPacket;
+
+        // @TODO ask for primary server location
+        
+        // @TODO create socket to receive files, create associated Thread (which save files on home2/ )
+        
+        
+        
+        // heartbeat to the primary server, catching SocketTimeoutException when timeout is reached.
+        udpSecondarySendPing = new DatagramSocket();
+        udpSecondarySendPing.setSoTimeout(2500);
+
+        InetAddress host = InetAddress.getByName("localhost");
+        pingPacket = new DatagramPacket(ping, ping.length, host, serverPortPing);
+
+        while (true) {
+            try {
+
+                udpSecondarySendPing.send(pingPacket);
+                System.out.println("Secondary: Ping sent!");
+
+                DatagramPacket reply = new DatagramPacket(ping, ping.length);
+                udpSecondarySendPing.receive(reply);
+                System.out.println("Secondary: ping round-trip received!");
+
+            } catch (SocketTimeoutException e) {
+               
+                // socket timeout 
+                System.out.println("Heartbeat failed! Take control of the primary server.");
+                
+                // kill FileReceiveThread, and close socket
+                
+                // take control
+                runPrimaryThroughSecondary();
+                
+                break;
+                
+            }
+
+            Thread.sleep(2500);
+        }
+
+    }
+
+    public static void main(String[] args) {
+
+        if (!init()) {
+            System.err.println("Erro ao inicializar o servidor.");
+        }
+
+        System.out.println("Role: 0 - Servidor Primário || 1 - Servidor Secundário");
+
+        Scanner sc = new Scanner(System.in);
+
+        int op = sc.nextInt();
+
+        if (op == 0) {
+            // servidor primário
+            runPrimary();
+        } else {
+            try {
+                // servidor secundário
+                runSecondary();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
     }

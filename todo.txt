@@ -1,11 +1,25 @@
+java -jar .\Project1-client-1.0.jar localhost 6000 localhost 6001
+
+
 TODO
 
-1 - fazer o mesmo para upload
-2 - tratar de meter current DIRECTORY em todo lado necessário
+> runPrimary()
+	XM- open UDP socket in order to establish a primary-secondary comm, in a new thread
+	XM- the created thread answers pings only
+	- send buffered files, after receiving from client
 
+> runSecondary()
+	E- ask for primary server location
+	E- open thread to receive file copies on a socket
+	XM- heartbeat to the primary server until it dies
+	XM- if heartbeat fails, runPrimary()
+
+
+> client
+	
+	E- servidor mete porta 0, client recebe porta e conecta-se para enviar ficheiro
+	E- try catch exception quando connection cair, e volta a ligar mas ao secondary
 
 
 PERGUNTAS AO STOR:
 
-1 - como o client sabe a porta para fazer download? hardcoded? pede porta?
-2 - esclarecer comunicação UDP entre servers
