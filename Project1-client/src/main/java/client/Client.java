@@ -192,7 +192,7 @@ public class Client {
             System.out.println("File to download: ");
             String filename = sc.nextLine();
 
-            String message = "6-" + filename;
+            String message = "6#" + filename;
             out.writeUTF(message);
 
             boolean response = in.readBoolean();
