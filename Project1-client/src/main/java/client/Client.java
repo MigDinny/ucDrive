@@ -53,20 +53,14 @@ public class Client {
                 System.out.println("Password");
                 String password = sc.nextLine();
 
-                current_dir = System.getProperty("user.dir");
-                String message = "1#" + mode + "#" + username + "#" + password + "#" + System.getProperty("user.dir");
+
+                String message = "1#" + mode + "#" + username + "#" + password;
                 out.writeUTF(message);
 
                 boolean success = in.readBoolean();
 
                 if (success) {
-                    System.out.println("You are now authenticated");
-                    //Get last directory
-                    if (Integer.parseInt(mode) == 0) {
-
-                        current_dir = in.readUTF();
-
-                    }   
+                    System.out.println("You are now authenticated"); 
                     break;
                 } else {
                     System.out.println("Username is already taken or wrong password");
@@ -120,7 +114,7 @@ public class Client {
             System.out.println("Select a dir to go to: ");
             String new_dir = sc.nextLine();
 
-            String message = "5#" + new_dir;
+            String message = "5#" + new_dir + "#" + username;
             out.writeUTF(message);
 
         } catch (IOException e) {
@@ -156,12 +150,6 @@ public class Client {
             current_dir = past_dir.getParent();
             System.out.println("In folder " + current_dir);
 
-            try {
-                String message = "9#" + username + "#" + current_dir;
-                out.writeUTF(message);
-            } catch (IOException e) {
-                System.out.println("IO " + e);
-            }
 
         } else {
 
@@ -173,13 +161,6 @@ public class Client {
                 current_dir = temp;
                 System.out.println("Invalid folder");
             } else {
-
-                try {
-                    String message = "9#" + username + "#" + current_dir;
-                    out.writeUTF(message);
-                } catch (IOException e) {
-                    System.out.println("IO " + e);
-                }
 
                 System.out.println("In folder " + current_dir);
             }
@@ -299,7 +280,7 @@ public class Client {
             try {
                 boolean exit = false;
 
-                System.out.print(current_dir + ">");
+                System.out.print(current_dir + ">>> ");
 
                 String option = sc.nextLine();
 

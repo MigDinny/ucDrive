@@ -96,14 +96,25 @@ class Connection extends Thread {
                     out.writeBoolean(true);
                     
                     String dir = confF.getDir(data_arr[2]);
-                    out.writeUTF(dir);
+                    String dir_path_arr[] = dir.split("/");
+                    
+                    //ignore home/
+                    boolean first = true;
+
+                    for(String s : dir_path_arr){
+                        if (!first) this.path.push(s);
+                        first = false;
+                        
+                    }
+                    
+                    this.currentDir = new File(joinPath(this.path));
                     
                     
                 } else {
                     out.writeBoolean(false);
                 }
             } else {
-                if (confF.addUser(data_arr[2], data_arr[3], data_arr[4])) {
+                if (confF.addUser(data_arr[2], data_arr[3], "")) {
                     out.writeBoolean(true);
                 } else {
                     out.writeBoolean(false);
@@ -167,6 +178,8 @@ class Connection extends Thread {
        
         System.out.println(joinPath(this.path));
         
+        confF.changeDir(data_arr[2], joinPath(this.path));
+        
         this.currentDir = new File(joinPath(this.path));
         
         System.out.println("Current path: " + this.currentDir.getAbsolutePath());
@@ -212,13 +225,6 @@ class Connection extends Thread {
         }
     }
     
-    
-    public void changeClientDir(){
-        
-        confF.changeDir(data_arr[1], data_arr[2]);
-            
-        
-    }
     
     public void downloadClientFile(){
         String filename = data_arr[1];
@@ -291,9 +297,6 @@ class Connection extends Thread {
                 case 8:
                     return false;
                     
-                case 9:
-                    changeClientDir();
-                    break;
                     
             }
         } catch (NumberFormatException e) {

@@ -42,11 +42,11 @@ public class HeartbeatController extends Thread {
                 DatagramPacket incomingPing = new DatagramPacket(ping, ping.length);
                 udpAnswerPing.receive(incomingPing);
 
-                System.out.println("Primary received ping: " + Arrays.toString(incomingPing.getData()));
+                //System.out.println("Primary received ping: " + Arrays.toString(incomingPing.getData()));
 
                 DatagramPacket reply = new DatagramPacket(incomingPing.getData(), incomingPing.getLength(), incomingPing.getAddress(), incomingPing.getPort());
                 udpAnswerPing.send(reply);
-                System.out.println("Primary: resend ping");
+                //System.out.println("Primary: resend ping");
             } catch (IOException ex) {
                 Logger.getLogger(HeartbeatController.class.getName()).log(Level.SEVERE, null, ex);
             }
