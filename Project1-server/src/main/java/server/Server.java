@@ -28,6 +28,7 @@ public class Server {
     private static int serverPortPing = 6002;
     private static String folderName = "home";
     private static String folderNameSecondary = "home2";
+    private static Scanner sc;
 
     public static DatagramSocket udpAnswerPing;
     public static DatagramSocket udpSecondarySendPing;
@@ -124,6 +125,8 @@ public class Server {
         DatagramPacket pingPacket;
 
         // @TODO ask for primary server location
+        System.out.println("What is the primary location");
+        String location = sc.nextLine();
         
         // @TODO create socket to receive files, create associated Thread (which save files on home2/ )
         
@@ -133,7 +136,7 @@ public class Server {
         udpSecondarySendPing = new DatagramSocket();
         udpSecondarySendPing.setSoTimeout(2500);
 
-        InetAddress host = InetAddress.getByName("localhost");
+        InetAddress host = InetAddress.getByName(location);
         pingPacket = new DatagramPacket(ping, ping.length, host, serverPortPing);
 
         while (true) {
@@ -173,7 +176,7 @@ public class Server {
 
         System.out.println("Role: 0 - Servidor Primário || 1 - Servidor Secundário");
 
-        Scanner sc = new Scanner(System.in);
+        sc = new Scanner(System.in);
 
         int op = sc.nextInt();
 
