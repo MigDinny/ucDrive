@@ -9,14 +9,23 @@ TODO
 	- send buffered files, after receiving from client
 
 > runSecondary()
-	E- ask for primary server location
+	XE- ask for primary server location
 	E- open thread to receive file copies on a socket
 	XM- heartbeat to the primary server until it dies
 	XM- if heartbeat fails, runPrimary()
 
+> fileUDPPrimarySend
+
+	M - fetch file from system, with path: miguel/abc/file.jpg
+	M- use socket to send buffered file (8KB per block)
+
+
+> fileUDPTransfer
+	
+	E - wait on .receive files from socket, and save them on home2/
 
 > client
-	
+		
 	E- servidor mete porta 0, client recebe porta e conecta-se para enviar ficheiro
 	E- try catch exception quando connection cair, e volta a ligar mas ao secondary
 
