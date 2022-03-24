@@ -3,7 +3,7 @@ package server;
 /**
  *
  * @author Edgar Duarte
- * @author Miguel Dinis
+ * @author Miguel Dinis!
  */
 import java.io.File;
 import java.net.ServerSocket;
