@@ -25,6 +25,8 @@ TODO
 	E - wait on .receive files from socket, and save them on home2/
 		>> receiveFile() linha 57
  
+	 - FAZER TIMEOUT CASO TRASNFERENCIA PARE A MEIO NO UDP, PARA ABANDONAR ESSE FICHEIRO
+
 
 > client
 		
