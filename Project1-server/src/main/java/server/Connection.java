@@ -83,6 +83,7 @@ class Connection extends Thread {
             out.writeUTF(s);
             out.flush();
         } catch (IOException ex) {
+            System.out.println("!asdasd");
             Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -237,9 +238,13 @@ class Connection extends Thread {
         }
         
         
-        try (ServerSocket listenSocket = new ServerSocket(7000)) {
+        try (ServerSocket listenSocket = new ServerSocket(0)) {
             
-            reply(true); // green light 
+            System.out.println(listenSocket.getLocalPort());
+            reply(true); // green light s
+            out.writeInt(listenSocket.getLocalPort());
+            
+            
             
             Socket fileTransferSocket = listenSocket.accept();
                         
@@ -255,6 +260,8 @@ class Connection extends Thread {
             os.flush();
             
             fileTransferSocket.close();
+            bis.close();
+        
 
         } catch (IOException e) {
             System.out.println("Listen:" + e.getMessage());
@@ -266,9 +273,10 @@ class Connection extends Thread {
     public void downloadClientFile(){
         String filename = data_arr[1];
         
-        try (ServerSocket listenSocket = new ServerSocket(7000)) {
+        try (ServerSocket listenSocket = new ServerSocket(0)) {
+            System.out.println(listenSocket.getLocalPort());
+            out.writeInt(listenSocket.getLocalPort());
             Socket fileDownloadSocket = listenSocket.accept();
-            
             
             // expect a file here, read and save
                 byte[] buffer = new byte[8192];

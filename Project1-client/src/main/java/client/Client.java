@@ -53,14 +53,13 @@ public class Client {
                 System.out.println("Password");
                 String password = sc.nextLine();
 
-
                 String message = "1#" + mode + "#" + username + "#" + password;
                 out.writeUTF(message);
 
                 boolean success = in.readBoolean();
 
                 if (success) {
-                    System.out.println("You are now authenticated"); 
+                    System.out.println("You are now authenticated");
                     break;
                 } else {
                     System.out.println("Username is already taken or wrong password");
@@ -78,48 +77,37 @@ public class Client {
 
     //Lets user change password
     //TO-DO Desconetar o cliente e pedir nova autenticacao
-    public static void changePassword() {
+    public static void changePassword() throws IOException {
 
-        try {
-            System.out.println("New password: ");
-            String password = sc.nextLine();
+        System.out.println("New password: ");
+        String password = sc.nextLine();
 
-            String message = "2#" + username + "-" + password;
-            out.writeUTF(message);
-
-        } catch (IOException e) {
-            System.out.println("IO " + e);
-        }
+        String message = "2#" + username + "-" + password;
+        out.writeUTF(message);
 
     }
 
-    public static void listServerFiles() {
-        try {
-            String message = "4";
-            out.writeUTF(message);
+    public static void listServerFiles() throws IOException {
 
-            String response1 = in.readUTF();
-            System.out.println("Dir: " + response1);
+        String message = "4";
+        out.writeUTF(message);
 
-            String response2 = in.readUTF();
-            System.out.println(response2);
+        String response1 = in.readUTF();
+        System.out.println("Dir: " + response1);
 
-        } catch (IOException e) {
-            System.out.println("IO " + e);
-        }
+        String response2 = in.readUTF();
+        System.out.println(response2);
+
     }
 
-    public static void changeDirServer() {
-        try {
-            System.out.println("Select a dir to go to: ");
-            String new_dir = sc.nextLine();
+    public static void changeDirServer() throws IOException {
 
-            String message = "5#" + new_dir + "#" + username;
-            out.writeUTF(message);
+        System.out.println("Select a dir to go to: ");
+        String new_dir = sc.nextLine();
 
-        } catch (IOException e) {
-            System.out.println("IO " + e);
-        }
+        String message = "5#" + new_dir + "#" + username;
+        out.writeUTF(message);
+
     }
 
     //From https://stackoverflow.com/questions/5694385/getting-the-filenames-of-all-files-in-a-folder
@@ -150,7 +138,6 @@ public class Client {
             current_dir = past_dir.getParent();
             System.out.println("In folder " + current_dir);
 
-
         } else {
 
             String temp = current_dir;
@@ -168,83 +155,41 @@ public class Client {
 
     }
 
-    public static void downloadFileServer() {
-        try {
-            System.out.println("File to download: ");
-            String filename = sc.nextLine();
+    public static void downloadFileServer() throws IOException {
 
-            String message = "6#" + filename;
-            out.writeUTF(message);
+        System.out.println("File to download: ");
+        String filename = sc.nextLine();
 
-            boolean response = in.readBoolean();
+        String message = "6#" + filename;
+        out.writeUTF(message);
 
-            if (response) {
-                try ( Socket s2 = new Socket(host1, 7000)) {
+        boolean response = in.readBoolean();
 
-                    // expect a file here, read and save
-                    byte[] buffer = new byte[8192];
+        if (response) {
+            int port = in.readInt();
 
-                    InputStream is = s2.getInputStream();
+            System.out.println(port);
 
-                    FileOutputStream fos = new FileOutputStream(current_dir + "/" + filename);
-                    BufferedOutputStream bos = new BufferedOutputStream(fos);
+            try ( Socket s2 = new Socket(host1, port)) {
 
-                    int bytesRead = is.read(buffer, 0, buffer.length);
+                // expect a file here, read and save
+                byte[] buffer = new byte[8192];
 
-                    while (bytesRead != -1) {
-                        //System.out.println("Bytes read: " + bytesRead);
-                        bos.write(buffer, 0, bytesRead);
-                        bos.flush();
-                        bytesRead = is.read(buffer, 0, buffer.length);
-                    }
+                InputStream is = s2.getInputStream();
 
-                    bos.close();
-                    s2.close();
+                FileOutputStream fos = new FileOutputStream(current_dir + "/" + filename);
+                BufferedOutputStream bos = new BufferedOutputStream(fos);
 
-                } catch (UnknownHostException e) {
-                    System.out.println("Sock:" + e.getMessage());
-                } catch (EOFException e) {
-                    System.out.println("EOF:" + e.getMessage());
-                } catch (IOException e) {
-                    System.out.println("IO:" + e.getMessage());
+                int bytesRead = is.read(buffer, 0, buffer.length);
+
+                while (bytesRead != -1) {
+                    //System.out.println("Bytes read: " + bytesRead);
+                    bos.write(buffer, 0, bytesRead);
+                    bos.flush();
+                    bytesRead = is.read(buffer, 0, buffer.length);
                 }
-            } else {
-                System.out.println("Connection refused or invalid file given");
-            }
 
-        } catch (IOException e) {
-            System.out.println("IO " + e);
-        }
-    }
-
-    public static void uploadFileServer() {
-        try {
-            System.out.println("File to upload: ");
-            String filename = sc.nextLine();
-
-            File f = new File(current_dir + "/" + filename);
-
-            if (!f.exists()) {
-                System.out.println("Given file does not exist");
-                return;
-            }
-
-            String message = "7#" + filename;
-            out.writeUTF(message);
-
-            try ( Socket s2 = new Socket(host1, 7000)) {
-
-                // send file over above socket
-                byte[] buffer = new byte[(int) f.length()];
-
-                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
-                bis.read(buffer, 0, buffer.length);
-
-                OutputStream os = s2.getOutputStream();
-                os.write(buffer, 0, buffer.length);
-
-                os.flush();
-
+                bos.close();
                 s2.close();
 
             } catch (UnknownHostException e) {
@@ -254,13 +199,57 @@ public class Client {
             } catch (IOException e) {
                 System.out.println("IO:" + e.getMessage());
             }
-
-        } catch (IOException e) {
-            System.out.println("IO " + e);
+        } else {
+            System.out.println("Connection refused or invalid file given");
         }
+
     }
 
-    public static void help() {
+    public static void uploadFileServer() throws IOException {
+        System.out.println("File to upload: ");
+        String filename = sc.nextLine();
+
+        File f = new File(current_dir + "/" + filename);
+
+        if (!f.exists()) {
+            System.out.println("Given file does not exist");
+            return;
+        }
+
+        String message = "7#" + filename;
+        out.writeUTF(message);
+
+        int port = in.readInt();
+
+        System.out.println(port);
+
+        try ( Socket s2 = new Socket(host1, port)) {
+
+            // send file over above socket
+            byte[] buffer = new byte[(int) f.length()];
+
+            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
+            bis.read(buffer, 0, buffer.length);
+
+            OutputStream os = s2.getOutputStream();
+            os.write(buffer, 0, buffer.length);
+
+            os.flush();
+
+            s2.close();
+
+        } catch (UnknownHostException e) {
+            System.out.println("Sock:" + e.getMessage());
+        } catch (EOFException e) {
+            System.out.println("EOF:" + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("IO:" + e.getMessage());
+        }
+
+    
+}
+
+public static void help() {
         System.out.println("-----Help------");
         System.out.println("chg pass - Change password");
         System.out.println("conf ports - Configure ports");
@@ -274,7 +263,7 @@ public class Client {
     }
 
 //User picks next action
-    public static void menu() {
+    public static void menu() throws IOException {
 
         while (true) {
             try {
@@ -343,26 +332,38 @@ public class Client {
 
             } catch (NumberFormatException e) {
                 System.out.println("Please introduce correct input values");
+            } catch (IOException e){
+                if(e instanceof java.net.SocketException){
+                    throw new IOException("Server 1 died! Attempting to connect to backup server!");
+                }
+                
+                System.out.println("IO:" + e);
             }
         }
     }
 
     public static void main(String[] args) {
 
-        if (args.length != 4) {
-            System.out.println("java client hostname port1 hostname2 port2");
+        if (args.length != 2) {
+            System.out.println("java client hostname hostname2");
             System.exit(0);
 
         }
 
         try {
             host1 = args[0];
-            serversocket = Integer.parseInt(args[1]);
-            host2 = args[2];
-            serversocket2 = Integer.parseInt(args[3]);
+            host2 = args[1];
+            
+            System.out.println("Primary server socket");
+                
+            serversocket = Integer.parseInt(sc.nextLine());
+
+            System.out.println("Secondary server socket");
+            serversocket2 = Integer.parseInt(sc.nextLine());
 
         } catch (Exception e) {
-            System.out.println("java client hostname port1 hostname2 port2");
+            System.out.println("java client hostname hostname2");
+            System.exit(0);
         }
 
         try ( Socket s = new Socket(args[0], serversocket)) {
@@ -385,8 +386,26 @@ public class Client {
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
-            System.out.println("IO:" + e.getMessage());
-        }
+            System.out.println(e);
+            try ( Socket s = new Socket(args[0], serversocket2)) {
 
+                current_dir = System.getProperty("user.dir");
+ 
+                in = new DataInputStream(s.getInputStream());
+                out = new DataOutputStream(s.getOutputStream());
+
+                sc = new Scanner(System.in);
+                
+                System.out.println("Successfully connected to server 2! Please authenticate again!");
+                auth();
+
+                menu();
+
+                s.close();
+            } catch (IOException ex) {
+                System.out.println("IO:" + ex.getMessage());
+            }
+
+        }
     }
 }

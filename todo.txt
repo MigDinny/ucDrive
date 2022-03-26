@@ -30,15 +30,15 @@ TODO
 
 > client
 		
-	E- servidor mete porta 0, client recebe porta e conecta-se para enviar ficheiro
-	E- try catch exception quando connection cair, e volta a ligar mas ao secondary
+	XE- servidor mete porta 0, client recebe porta e conecta-se para enviar ficheiro
+	XE- try catch exception quando connection cair, e volta a ligar mas ao secondary
 
 
 > extra
 
-	client PEDE location:port primary/secondary
-	primary pede location:port do secondary
-	secondary pede location:port do primary
+	X?client PEDE location:port primary/secondary
+	X?primary pede location:port do secondary 		(não estão a ser aplicados/variavel unused)
+	X? secondary pede location:port do primary 
 
 
 
