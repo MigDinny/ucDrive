@@ -3,7 +3,7 @@ package server;
 /**
  *
  * @author Edgar Duarte
- * @author Miguel Dinis
+ * @author Miguel Dinis!
  */
 import java.io.File;
 import java.net.ServerSocket;
@@ -16,6 +16,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Queue;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +28,7 @@ public class Server {
     private static int serverPortSecondary = 6001; // secondary server
     private static int serverPortPing = 6002;
     private static int udpSecondaryPortFileTransfer = 6003;
+    private static String udpSecondaryLocation = "localhost";
     private static String folderName = "home";
     private static String folderNameSecondary = "home2";
     private static Scanner sc;
@@ -73,11 +75,11 @@ public class Server {
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
         }
         
-        // BEGIN @TODO create socket to send files to secondary server 
+        // open thread to read queue once in T seconds and send the files waiting in queue
+        Queue<String> fileQueue = new FileUDPPrimarySend(udpSecondaryLocation, udpSecondaryPortFileTransfer).queueToSend;
         
         
-        // END
-
+        // heartbeat controller: answers every ping 
         new HeartbeatController(udpAnswerPing, serverPortPing);
 
         // accept incoming connections and create threads for them
@@ -90,7 +92,7 @@ public class Server {
             while (true) {
                 Socket clientSocket = listenSocket.accept();
                 n_thread++;
-                new Connection(clientSocket, n_thread, confF, folderName);
+                new Connection(clientSocket, n_thread, fileQueue, confF, folderName);
             }
 
         } catch (IOException e) {

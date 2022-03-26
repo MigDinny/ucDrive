@@ -14,6 +14,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Queue;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,8 +30,33 @@ class Connection extends Thread {
     private Config confF; // config.json
     private Stack<String> path; // each folder is an element of this stack, so we can push and pop
     private File currentDir;
-
+    private Queue<String> fileQueue;
+    private boolean secondaryActingAsPrimary = false;
+    
+    
     //Constructor
+    public Connection(Socket client_socket, int n_thread, Queue<String> fileQueue, Config confF, String homeDir) {
+        try {
+
+            this.client_socket = client_socket;
+            
+            this.in = new DataInputStream(client_socket.getInputStream());
+            this.out = new DataOutputStream(client_socket.getOutputStream());
+            this.thread_number = n_thread;
+            this.confF = confF;
+            this.homeDir = homeDir;
+            this.path = new Stack<>();
+            this.fileQueue = fileQueue;
+            
+            
+            this.currentDir = new File(homeDir);
+            
+            this.start();
+        } catch (IOException e) {
+            System.out.println("Connection:" + e.getMessage());
+        }
+    }
+    
     public Connection(Socket client_socket, int n_thread, Config confF, String homeDir) {
         try {
 
@@ -42,8 +68,7 @@ class Connection extends Thread {
             this.confF = confF;
             this.homeDir = homeDir;
             this.path = new Stack<>();
-            
-            
+            this.secondaryActingAsPrimary = true;
             
             this.currentDir = new File(homeDir);
             
@@ -81,6 +106,18 @@ class Connection extends Thread {
         
         return path;
     }
+    
+    private String joinPathWithoutHomeDir(Stack<String> s) {
+        String path = "";
+        
+        for (String f : s) {
+            path = path.concat(f);
+            path = path.concat("/");
+        }
+        
+        return path;
+    }
+   
     
     //Authenticates the new client connection.
     /*
@@ -252,12 +289,16 @@ class Connection extends Thread {
 
                 bos.close();
                 listenSocket.close();
-           
-        
-        }catch (IOException e) {
+        } catch (IOException e) {
             System.out.println("Listen:" + e.getMessage());
-            
         }
+        
+        
+        // if this thread was launched by Primary Server and not by Secondary Server (acting as Primary)
+        // add file to Queue
+        if (!secondaryActingAsPrimary) 
+            fileQueue.add(joinPathWithoutHomeDir(this.path) + filename);
+        
     }
 
     /*
