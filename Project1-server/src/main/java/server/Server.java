@@ -133,6 +133,7 @@ public class Server {
         
         // @TODO create socket to receive files, create associated Thread (which save files on home2/ )
         
+        new FileUDPSecondaryReceive(udpSecondaryPortFileTransfer);
         
         
         // heartbeat to the primary server, catching SocketTimeoutException when timeout is reached.
