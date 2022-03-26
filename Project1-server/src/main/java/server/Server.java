@@ -26,6 +26,7 @@ public class Server {
     private static int serverPort = 6000; // primary server
     private static int serverPortSecondary = 6001; // secondary server
     private static int serverPortPing = 6002;
+    private static int udpSecondaryPortFileTransfer = 6003;
     private static String folderName = "home";
     private static String folderNameSecondary = "home2";
     private static Scanner sc;
@@ -130,6 +131,7 @@ public class Server {
         
         // @TODO create socket to receive files, create associated Thread (which save files on home2/ )
         
+        new FileUDPSecondaryReceive(udpSecondaryPortFileTransfer);
         
         
         // heartbeat to the primary server, catching SocketTimeoutException when timeout is reached.
