@@ -11,6 +11,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
@@ -28,21 +29,19 @@ public class FileUDPPrimarySend extends Thread {
     private InetAddress secondaryLocationAddress; // secondary server location in InetAddress form
     private DatagramSocket udpSendSocket;
     public Queue<String> queueToSend;
-    
 
     public FileUDPPrimarySend(String secondaryLocation, int port) {
 
         this.secondaryPort = port;
         this.secondaryLocation = secondaryLocation;
         this.queueToSend = new LinkedList<>();
-        
+
         try {
-            this.secondaryLocationAddress = InetAddress.getByName(this.secondaryLocation);            
+            this.secondaryLocationAddress = InetAddress.getByName(this.secondaryLocation);
         } catch (UnknownHostException ex) {
             Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-               
+
         try {
             this.udpSendSocket = new DatagramSocket();
         } catch (SocketException ex) {
@@ -65,8 +64,7 @@ public class FileUDPPrimarySend extends Thread {
                     Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            
-            
+
             System.out.println("Sending: " + queueToSend.peek());
 
             String fileToSend = queueToSend.remove();
@@ -78,29 +76,55 @@ public class FileUDPPrimarySend extends Thread {
                 System.err.println("Error sending file from primary to secondary: file does not exist.");
                 continue;
             }
-            
-            
 
             // send file over above socket
             byte[] buffer = new byte[(int) f.length()];
 
             BufferedInputStream bis;
             try {
+
+                // send number of bytes to read in a 4-byte buffer
+                byte[] len = ByteBuffer.allocate(4).putInt((int) f.length()).array();
+                DatagramPacket lenPacket = new DatagramPacket(len, len.length, this.secondaryLocationAddress, this.secondaryPort);
+                this.udpSendSocket.send(lenPacket);
+
+                // send path
+                byte[] pathBytes = new byte[1024];
+                pathBytes = fileToSend.getBytes();
+                DatagramPacket pathPacket = new DatagramPacket(pathBytes, pathBytes.length, this.secondaryLocationAddress, this.secondaryPort);
+                this.udpSendSocket.send(pathPacket);
+                
+                // send file
                 bis = new BufferedInputStream(new FileInputStream(f));
                 bis.read(buffer, 0, buffer.length);
 
-                DatagramPacket filePacket = new DatagramPacket(buffer, buffer.length, this.secondaryLocationAddress, this.secondaryPort);
                 
-                this.udpSendSocket.send(filePacket);
+                int bytesSent = 0;
+                DatagramPacket filePacket;
+                int lenToRead = 1024;
+                while (bytesSent < buffer.length) {
+                    lenToRead = 1024;
+                    if (buffer.length - bytesSent < 1024) lenToRead = buffer.length - bytesSent;
+                    
+                    filePacket = new DatagramPacket(buffer, bytesSent, lenToRead, this.secondaryLocationAddress, this.secondaryPort);
+                    
+                    bytesSent += 1024;
+                    System.out.println("BYTES SENT: " + Integer.toString(bytesSent));
+                    
+                    this.udpSendSocket.send(filePacket);
+                }
+                
+                // wait for ACK
+                // if error, retry
+                
+                // if timeout on ACK is reached, ... idk
                 
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
                 Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
 
-            
         }
 
     }
