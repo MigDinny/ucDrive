@@ -56,12 +56,23 @@ public class FileUDPPrimarySend extends Thread {
     public void run() {
 
         while (true) {
+            // check if empty queue
+            if (queueToSend.isEmpty()) {
+                try {
+                    Thread.sleep(5000);
+                    continue;
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
+            
             System.out.println("Sending: " + queueToSend.peek());
 
             String fileToSend = queueToSend.remove();
 
             // fetch file from system
-            File f = new File(fileToSend);
+            File f = new File("home/" + fileToSend);
 
             if (!f.exists()) {
                 System.err.println("Error sending file from primary to secondary: file does not exist.");
@@ -89,14 +100,7 @@ public class FileUDPPrimarySend extends Thread {
             }
             
 
-            // use socket to send buffered file
-            if (queueToSend.isEmpty()) {
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            
         }
 
     }
