@@ -58,6 +58,10 @@ public class Server {
         // open UDP socket in order to answer pings. answer one ping before beginning running primary
         // create thread to answer pings
         try {
+            System.out.println("What port is secondary server in");
+            int port_secondary = Integer.parseInt(sc.nextLine());
+            
+            
 
             udpAnswerPing = new DatagramSocket(serverPortPing);
 
@@ -70,18 +74,20 @@ public class Server {
             udpAnswerPing.send(reply);
 
         } catch (SocketException ex) {
+            System.out.println("EFWErf");
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException e) {
+            System.out.println("EFWErf2");
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
         }
         
         // open thread to read queue once in T seconds and send the files waiting in queue
-        Queue<String> fileQueue = new FileUDPPrimarySend(udpSecondaryLocation, udpSecondaryPortFileTransfer).queueToSend;
+        //Queue<String> fileQueue = new FileUDPPrimarySend(udpSecondaryLocation, udpSecondaryPortFileTransfer).queueToSend;
         
         
         // heartbeat controller: answers every ping 
-        new HeartbeatController(udpAnswerPing, serverPortPing);
 
+        new HeartbeatController(udpAnswerPing, serverPortPing);
         // accept incoming connections and create threads for them
         int n_thread = 0;
 
@@ -92,7 +98,7 @@ public class Server {
             while (true) {
                 Socket clientSocket = listenSocket.accept();
                 n_thread++;
-                new Connection(clientSocket, n_thread, fileQueue, confF, folderName);
+                new Connection(clientSocket, n_thread, confF, folderName);
             }
 
         } catch (IOException e) {
@@ -130,6 +136,10 @@ public class Server {
         // @TODO ask for primary server location
         System.out.println("What is the primary location");
         String location = sc.nextLine();
+        System.out.println("What port is primary server in");
+        int port_primary = Integer.parseInt(sc.nextLine());
+        
+
         
         // @TODO create socket to receive files, create associated Thread (which save files on home2/ )
         
@@ -181,12 +191,12 @@ public class Server {
 
         sc = new Scanner(System.in);
 
-        int op = sc.nextInt();
+        int op = Integer.parseInt(sc.nextLine());
 
         if (op == 0) {
             // servidor primário
             runPrimary();
-        } else {
+        } else if (op == 1){
             try {
                 // servidor secundário
                 runSecondary();
@@ -195,6 +205,9 @@ public class Server {
             } catch (IOException ex) {
                 Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+        else{
+            System.out.println("Wrong value given");
         }
 
     }

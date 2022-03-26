@@ -21,10 +21,12 @@ public class HeartbeatController extends Thread {
     public HeartbeatController(DatagramSocket udpAnswerPing, int serverPortPing) {
         this.udpAnswerPing = udpAnswerPing;
         this.serverPortPing = serverPortPing;
+        System.out.println("WERWQEFWQEFWEFQ");
 
         try {
             udpAnswerPing.setSoTimeout(7500);
         } catch (SocketException ex) {
+            
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
 
@@ -48,6 +50,7 @@ public class HeartbeatController extends Thread {
                 udpAnswerPing.send(reply);
                 //System.out.println("Primary: resend ping");
             } catch (IOException ex) {
+                System.out.println("WEWEWEFWEFQWEFQWEFQwqef");
                 Logger.getLogger(HeartbeatController.class.getName()).log(Level.SEVERE, null, ex);
             }
 
