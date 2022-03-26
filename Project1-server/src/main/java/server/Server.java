@@ -28,6 +28,7 @@ public class Server {
     private static int serverPortSecondary = 6001; // secondary server
     private static int serverPortPing = 6002;
     private static int udpSecondaryPortFileTransfer = 6003;
+    private static String udpSecondaryLocation = "localhost";
     private static String folderName = "home";
     private static String folderNameSecondary = "home2";
     private static Scanner sc;
@@ -75,7 +76,7 @@ public class Server {
         }
         
         // open thread to read queue once in T seconds and send the files waiting in queue
-        Queue<String> fileQueue = new FileUDPPrimarySend(udpSecondaryPortFileTransfer).queueToSend;
+        Queue<String> fileQueue = new FileUDPPrimarySend(udpSecondaryLocation, udpSecondaryPortFileTransfer).queueToSend;
         
         
         // heartbeat controller: answers every ping 

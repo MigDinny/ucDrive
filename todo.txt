@@ -16,18 +16,28 @@ TODO
 
 > fileUDPPrimarySend
 
-	M - fetch file from system, with path: miguel/abc/file.jpg
-	M- use socket to send buffered file (8KB per block)
+	XM - fetch file from system, with path: miguel/abc/file.jpg
+	XM- use socket to send buffered file (8KB per block)
 
 
 > fileUDPTransfer
 	
 	E - wait on .receive files from socket, and save them on home2/
+		>> receiveFile() linha 57
+ 
 
 > client
 		
 	E- servidor mete porta 0, client recebe porta e conecta-se para enviar ficheiro
 	E- try catch exception quando connection cair, e volta a ligar mas ao secondary
+
+
+> extra
+
+	client PEDE location:port primary/secondary
+	primary pede location:port do secondary
+	secondary pede location:port do primary
+
 
 
 PERGUNTAS AO STOR:
