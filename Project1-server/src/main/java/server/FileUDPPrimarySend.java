@@ -115,7 +115,9 @@ public class FileUDPPrimarySend extends Thread {
                 }
                 
                 // wait for ACK
+                
                 // if error, retry
+                //queueToSend.add(fileToSend);
                 
                 // if timeout on ACK is reached, ... idk
                 
