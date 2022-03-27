@@ -19,10 +19,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.net.InetAddress;
 
 /**
  *
- * @author edgar
+ * @author Miguel
+ * @coauthor Edgar
  */
 public class FileUDPSecondaryReceive extends Thread {
 
@@ -31,7 +33,8 @@ public class FileUDPSecondaryReceive extends Thread {
     public FileUDPSecondaryReceive(int serverPort) throws InterruptedException, IOException {
 
         this.udpFileSocket = new DatagramSocket(serverPort);
-        this.udpFileSocket.setSoTimeout(1000); // timeout de 1 sec
+
+        //this.udpFileSocket.setSoTimeout(1000); // timeout de 1 sec
         this.start();
 
     }
@@ -47,14 +50,22 @@ public class FileUDPSecondaryReceive extends Thread {
             String filePath;
             byte[] lenBytes = new byte[4];
             byte[] pathBytes = new byte[1024];
+            int incPort = 0;
+            InetAddress incAddress = null;
 
             DatagramPacket lenBytesPacket = new DatagramPacket(lenBytes, 4);
             DatagramPacket pathBytesPacket = new DatagramPacket(pathBytes, 1024);
 
             try {
 
+                
                 this.udpFileSocket.receive(lenBytesPacket);
                 this.udpFileSocket.receive(pathBytesPacket);
+                
+                
+                incPort = lenBytesPacket.getPort();
+                incAddress = lenBytesPacket.getAddress();
+                
                 fileLen = ByteBuffer.wrap(lenBytes).getInt();
                 filePath = new String(pathBytes, StandardCharsets.UTF_8);
                 String filePathTrimmed = filePath.trim();
@@ -66,8 +77,11 @@ public class FileUDPSecondaryReceive extends Thread {
                 byte[] buffer = new byte[1024];
                 DatagramPacket filePacket = new DatagramPacket(buffer, 1024);
 
+                
                 while (bytesRead < fileLen) {
                     this.udpFileSocket.receive(filePacket);
+                    
+
 
                     System.arraycopy(buffer, 0, fileBytes, bytesRead, filePacket.getLength());
                     bytesRead += filePacket.getLength();
@@ -85,10 +99,23 @@ public class FileUDPSecondaryReceive extends Thread {
 
                 System.out.println("FILE \"" + filePath + "\" received and saved.");
                 
+                byte[] ack = {(byte) 0x1};
+                DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
+                DatagramPacket reply = new DatagramPacket(ackPacket.getData(), ackPacket.getLength(), incAddress, incPort);
+                this.udpFileSocket.send(reply);
+                
                 // SEND ACK (acknowledge)
 
             } catch (SocketTimeoutException e) {
                 
+                try{
+                    byte[] ack = {(byte) 0x0};
+                    DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
+                    DatagramPacket reply = new DatagramPacket(ackPacket.getData(), ackPacket.getLength(), incAddress, incPort);
+                    this.udpFileSocket.send(reply);
+                }catch(IOException ex){
+                    Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 // we know that there was something wrong receiving the file, probably
                 
                 // send info saying there was an error
@@ -98,6 +125,7 @@ public class FileUDPSecondaryReceive extends Thread {
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
+                System.out.println("HERE");
                 Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
             }
             

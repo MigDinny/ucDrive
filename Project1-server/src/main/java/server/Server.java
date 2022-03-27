@@ -2,7 +2,7 @@ package server;
 
 /**
  *
- * @author Edgar Duarte
+ * @author Edgar Duarte!
  * @author Miguel Dinis!
  */
 import java.io.File;

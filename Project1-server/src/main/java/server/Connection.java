@@ -19,6 +19,11 @@ import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ *
+ * @author Edgar
+ * @author Miguel
+ */
 class Connection extends Thread {
     
     private String homeDir; // home directory with all the contents, cannot be changed
@@ -144,8 +149,9 @@ class Connection extends Thread {
                         first = false;
                         
                     }
-                    
+                    this.homeDir = this.homeDir + "/" + confF.getId(data_arr[2]);
                     this.currentDir = new File(joinPath(this.path));
+                    
                     
                     
                 } else {
@@ -153,11 +159,15 @@ class Connection extends Thread {
                 }
             } else {
                 if (confF.addUser(data_arr[2], data_arr[3], "")) {
+                    this.homeDir = this.homeDir + "/" + confF.getId(data_arr[2]) + "/";
+                    this.currentDir = new File(this.homeDir);
+                    this.currentDir.mkdir();
                     out.writeBoolean(true);
                 } else {
                     out.writeBoolean(false);
                 }
             }
+            
 
         } catch (NumberFormatException e) {
             System.out.println("Something is wrong with incoming string. Thread ending");

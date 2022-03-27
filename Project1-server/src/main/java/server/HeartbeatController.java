@@ -21,7 +21,6 @@ public class HeartbeatController extends Thread {
     public HeartbeatController(DatagramSocket udpAnswerPing, int serverPortPing) {
         this.udpAnswerPing = udpAnswerPing;
         this.serverPortPing = serverPortPing;
-        System.out.println("WERWQEFWQEFWEFQ");
 
         try {
             udpAnswerPing.setSoTimeout(7500);

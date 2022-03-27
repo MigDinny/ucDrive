@@ -11,7 +11,7 @@ import org.json.simple.parser.ParseException;
 
 /**
  *
- * @author edgar
+ * @author Edgar
  */
 class Config {
 
@@ -56,6 +56,18 @@ class Config {
         }
         return false;
     }
+    
+    public int getId(String username){
+        
+        for (int i = 0; i < user_list.size(); i++) {
+            JSONObject user = (JSONObject) user_list.get(i);
+            if (user.get("username").equals(username)) {
+                return Integer.parseInt(user.get("id").toString());
+            }
+        }
+        
+        return -1;
+    }
 
     //Adds user to configuration file
     //Returns false if a user with the same user name exists. Returns true if user was sucessfully added
@@ -68,10 +80,11 @@ class Config {
                 return false;
             }
         }
-
+        
         json_user.put("username", username);
         json_user.put("password", password);
         json_user.put("dir", dir);
+        json_user.put("id", GetNewId());
 
         user_list.add(json_user);
 
@@ -79,6 +92,19 @@ class Config {
 
         return true;
 
+    }
+    
+    int GetNewId(){
+        int j = 1;
+        for(int i = 0; i < user_list.size(); i++){
+            JSONObject user = (JSONObject) user_list.get(i);
+            int aux = Integer.parseInt(user.get("id").toString());
+            
+            if(aux >= j){
+                j = aux +1; 
+            }
+        }
+        return j;
     }
 
     //updates the password of a user
@@ -93,7 +119,8 @@ class Config {
         writeToFile();
 
     }
-
+    
+    
     synchronized void writeToFile() {
         try (FileWriter file = new FileWriter("conf.json")) {
             //We can write any JSONArray or JSONObject instance to the file

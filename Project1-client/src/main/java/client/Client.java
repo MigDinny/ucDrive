@@ -82,8 +82,11 @@ public class Client {
         System.out.println("New password: ");
         String password = sc.nextLine();
 
-        String message = "2#" + username + "-" + password;
+	 String message = "2#" + username + "#" + password;
         out.writeUTF(message);
+        
+        System.out.println("Please authenticate again!");
+        auth();
 
     }
 
