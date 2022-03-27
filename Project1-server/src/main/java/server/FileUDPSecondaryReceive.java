@@ -7,9 +7,11 @@ package server;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -20,6 +22,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.net.InetAddress;
+import java.security.MessageDigest;
 
 /**
  *
@@ -39,6 +42,34 @@ public class FileUDPSecondaryReceive extends Thread {
 
     }
 
+
+    private static byte[] generateMD5Checksum(String filename) throws Exception {
+        InputStream fis = new FileInputStream(filename);
+
+        byte[] buffer = new byte[1024];
+        MessageDigest complete = MessageDigest.getInstance("MD5");
+        int numRead;
+
+        do {
+            numRead = fis.read(buffer);
+            if (numRead > 0) {
+                complete.update(buffer, 0, numRead);
+            }
+        } while (numRead != -1);
+
+        fis.close();
+        return complete.digest();
+    }
+
+    private static String getMD5Checksum(String filename) throws Exception {
+        byte[] b = generateMD5Checksum(filename);
+        String result = "";
+
+        for (int i = 0; i < b.length; i++) {
+            result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        return result;
+    }
 
 
 
@@ -111,9 +142,12 @@ public class FileUDPSecondaryReceive extends Thread {
 
                 System.out.println("FILE \"" + filePath + "\" received and saved.");
                 
+                // CALCULATE MD5 Checksum
+                String md5string = getMD5Checksum(filePath);
+                System.out.println("CHECKSUM: " + md5string);
                 
                 // SEND ACK (acknowledge)
-                byte[] ack = ByteBuffer.allocate(1).putShort((short) 1).array();
+                byte[] ack = generateMD5Checksum(filePath);
                 DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
                 DatagramPacket reply = new DatagramPacket(ackPacket.getData(), ackPacket.getLength(), incAddress, incPort);
                 this.udpFileSocket.send(reply);
@@ -140,6 +174,8 @@ public class FileUDPSecondaryReceive extends Thread {
                 Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
                 System.out.println("HERE");
+                Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
                 Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
             }
             
