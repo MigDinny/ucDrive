@@ -23,8 +23,8 @@ import java.io.OutputStream;
  */
 public class Client {
 
-    private static int serversocket;
-    private static int serversocket2;
+    private static int port1;
+    private static int port2;
     private static String host1;
     private static String host2;
 
@@ -344,29 +344,29 @@ public static void help() {
 
     public static void main(String[] args) {
 
-        if (args.length != 2) {
-            System.out.println("java client hostname hostname2");
+        if (args.length != 4) {
+            System.out.println("java client primary:port secondary:port");
             System.exit(0);
 
         }
 
         try {
-            host1 = args[0];
-            host2 = args[1];
             
-            System.out.println("Primary server socket");
-                
-            serversocket = Integer.parseInt(sc.nextLine());
-
-            System.out.println("Secondary server socket");
-            serversocket2 = Integer.parseInt(sc.nextLine());
+            Scanner sc = new Scanner(System.in);
+            
+            host1 = args[0];
+            port1 = Integer.parseInt(args[1]);
+            host2 = args[2];
+            port2 = Integer.parseInt(args[3]);
+            
 
         } catch (Exception e) {
-            System.out.println("java client hostname hostname2");
+            System.out.println(e);
+            System.out.println("java client primary:port secondary:port");
             System.exit(0);
         }
 
-        try ( Socket s = new Socket(args[0], serversocket)) {
+        try ( Socket s = new Socket(host1, port1)) {
 
             current_dir = System.getProperty("user.dir");
 
@@ -387,7 +387,7 @@ public static void help() {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
             System.out.println(e);
-            try ( Socket s = new Socket(args[0], serversocket2)) {
+            try ( Socket s = new Socket(host2, port2)) {
 
                 current_dir = System.getProperty("user.dir");
  

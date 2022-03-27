@@ -26,8 +26,8 @@ public class Server {
 
     private static int serverPort = 6000; // primary server
     private static int serverPortSecondary = 6001; // secondary server
-    private static int serverPortPing = 6002;
-    private static int udpSecondaryPortFileTransfer = 6003;
+    private static int serverPortPing = 6002; // answer ping port primary
+    private static int udpSecondaryPortFileTransfer = 6003; // secondary port open for file transfers
     private static String udpSecondaryLocation = "localhost";
     private static String folderName = "home";
     private static String folderNameSecondary = "home2";
@@ -58,9 +58,11 @@ public class Server {
         // open UDP socket in order to answer pings. answer one ping before beginning running primary
         // create thread to answer pings
         try {
-            System.out.println("What port is secondary server in");
-            int port_secondary = Integer.parseInt(sc.nextLine());
+            System.out.println("Primary Server console port (6000): ");
+            serverPort = Integer.parseInt(sc.nextLine());
             
+            System.out.println("Secondary Server location (localhost): ");
+            udpSecondaryLocation = sc.nextLine();
             
 
             udpAnswerPing = new DatagramSocket(serverPortPing);
@@ -82,7 +84,7 @@ public class Server {
         }
         
         // open thread to read queue once in T seconds and send the files waiting in queue
-        //Queue<String> fileQueue = new FileUDPPrimarySend(udpSecondaryLocation, udpSecondaryPortFileTransfer).queueToSend;
+        Queue<String> fileQueue = new FileUDPPrimarySend(udpSecondaryLocation, udpSecondaryPortFileTransfer).queueToSend;
         
         
         // heartbeat controller: answers every ping 
@@ -134,15 +136,14 @@ public class Server {
         DatagramPacket pingPacket;
 
         // @TODO ask for primary server location
-        System.out.println("What is the primary location");
+        System.out.println("Primary Server Location (localhost): ");
         String location = sc.nextLine();
-        System.out.println("What port is primary server in");
-        int port_primary = Integer.parseInt(sc.nextLine());
+        System.out.println("Secondary Server client console port (6001): ");
+        serverPortSecondary = Integer.parseInt(sc.nextLine());
         
 
         
-        // @TODO create socket to receive files, create associated Thread (which save files on home2/ )
-        
+        // open thread to receive file copies Primary > Secondary
         new FileUDPSecondaryReceive(udpSecondaryPortFileTransfer);
         
         

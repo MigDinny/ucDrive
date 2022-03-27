@@ -36,8 +36,7 @@ TODO
 
 > extra
 
-	X?client PEDE location:port primary/secondary
-	X?primary pede location:port do secondary 		(não estão a ser aplicados/variavel unused)
+	X? primary pede location:port do secondary 		(não estão a ser aplicados/variavel unused)
 	X? secondary pede location:port do primary 
 
 
