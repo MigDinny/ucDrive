@@ -76,7 +76,6 @@ public class Client {
     }
 
     //Lets user change password
-    //TO-DO Desconetar o cliente e pedir nova autenticacao
     public static void changePassword() throws IOException {
 
         System.out.println("New password: ");

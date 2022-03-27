@@ -119,7 +119,7 @@ public class FileUDPPrimarySend extends Thread {
 
             String fileToSend = queueToSend.remove();
             
-            System.out.println("WEHRWEHRWEHRHWHE" + fileToSend);
+
             // fetch file from system
             File f = new File("home/" + fileToSend);
 
@@ -167,7 +167,7 @@ public class FileUDPPrimarySend extends Thread {
                 }
 
                 // calculate file md5 checksum
-                String generatedChecksum = getMD5Checksum(fileToSend);
+                String generatedChecksum = getMD5Checksum("home" + fileToSend);
                 System.out.println("CHECKSUM: " + generatedChecksum);
 
                 this.udpSendSocket.setSoTimeout(5000);
