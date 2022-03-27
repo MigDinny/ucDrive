@@ -44,9 +44,7 @@ public class FileUDPSecondaryReceive extends Thread {
 
 
     private static byte[] generateMD5Checksum(String filename) throws Exception {
-        System.out.println("FILENAME CHECK" + filename);
         InputStream fis = new FileInputStream(filename);
-        System.out.println("OUTTTTTT" + filename);
         byte[] buffer = new byte[1024];
         MessageDigest complete = MessageDigest.getInstance("MD5");
         int numRead;
@@ -135,9 +133,6 @@ public class FileUDPSecondaryReceive extends Thread {
 
                 String p = "home2";
                 p = p.concat(filePathTrimmed);
-                
-                System.out.println("FILENAME:"+p);
-                System.out.println("FILE PATH " + filePathTrimmed);
                 
                 FileOutputStream fos = new FileOutputStream(p);
                 byte[] slice = Arrays.copyOfRange(fileBytes, 0, fileLen);
