@@ -37,7 +37,7 @@ class Connection extends Thread {
     private File currentDir;
     private Queue<String> fileQueue;
     private boolean secondaryActingAsPrimary = false;
-    
+    private int clientID; // client ID
     
     //Constructor
     public Connection(Socket client_socket, int n_thread, Queue<String> fileQueue, Config confF, String homeDir) {
@@ -176,7 +176,8 @@ class Connection extends Thread {
             System.out.println("IO: " + e);
             return false;
         }
-
+        
+        this.clientID = confF.getId(data_arr[2]);
         return true;
     }
 
@@ -315,7 +316,7 @@ class Connection extends Thread {
         // if this thread was launched by Primary Server and not by Secondary Server (acting as Primary)
         // add file to Queue
         if (!secondaryActingAsPrimary) 
-            fileQueue.add(joinPathWithoutHomeDir(this.path) + filename);
+            fileQueue.add("/" + this.clientID + "/" + joinPathWithoutHomeDir(this.path) + filename);
         
     }
 

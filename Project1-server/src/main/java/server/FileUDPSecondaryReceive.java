@@ -99,17 +99,19 @@ public class FileUDPSecondaryReceive extends Thread {
 
                 System.out.println("FILE \"" + filePath + "\" received and saved.");
                 
-                byte[] ack = {(byte) 0x1};
+                
+                // SEND ACK (acknowledge)
+                byte[] ack = ByteBuffer.allocate(1).putShort((short) 1).array();
                 DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
                 DatagramPacket reply = new DatagramPacket(ackPacket.getData(), ackPacket.getLength(), incAddress, incPort);
                 this.udpFileSocket.send(reply);
                 
-                // SEND ACK (acknowledge)
+                
 
             } catch (SocketTimeoutException e) {
                 
                 try{
-                    byte[] ack = {(byte) 0x0};
+                    byte[] ack = ByteBuffer.allocate(1).putShort((short) 0).array();
                     DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
                     DatagramPacket reply = new DatagramPacket(ackPacket.getData(), ackPacket.getLength(), incAddress, incPort);
                     this.udpFileSocket.send(reply);

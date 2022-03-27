@@ -39,7 +39,7 @@ public class FileUDPPrimarySend extends Thread {
     public Queue<String> queueToSend;
 
     public FileUDPPrimarySend(String secondaryLocation, int port) {
-
+        
         this.secondaryPort = port;
         this.secondaryLocation = secondaryLocation;
         this.queueToSend = new LinkedList<>();
@@ -85,6 +85,8 @@ public class FileUDPPrimarySend extends Thread {
     public void run() {
 
         while (true) {
+            System.out.println(queueToSend);
+            
             // check if empty queue
             if (queueToSend.isEmpty()) {
                 try {
@@ -109,7 +111,7 @@ public class FileUDPPrimarySend extends Thread {
             
             // calculate file md5 checksum
             byte[] checksum = calculateMD5Checksum(fileToSend);
-            System.out.println(checksum.toString());
+            System.out.println("CHECKSUM: " + checksum.toString());
 
             // send file over above socket
             byte[] buffer = new byte[(int) f.length()];
@@ -158,13 +160,15 @@ public class FileUDPPrimarySend extends Thread {
                 // if error, retry
                 this.udpSendSocket.receive(ackPacket);
                 
+                short ackStatus = ByteBuffer.wrap(ack).getShort();
+                
                 //means there was an error with the packet
-                if(!ackPacket.getData().equals(0x1)){
+                if(ackStatus == 0){
                     queueToSend.add(fileToSend);
                 }
-                else{
+                else {
                     
-                }
+                }           
                 
                 //Just in case!
                 this.udpSendSocket.setSoTimeout(0);

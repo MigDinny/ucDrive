@@ -100,7 +100,7 @@ public class Server {
             while (true) {
                 Socket clientSocket = listenSocket.accept();
                 n_thread++;
-                new Connection(clientSocket, n_thread, confF, folderName);
+                new Connection(clientSocket, n_thread, fileQueue, confF, folderName);
             }
 
         } catch (IOException e) {
