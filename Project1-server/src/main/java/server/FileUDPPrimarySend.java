@@ -39,7 +39,7 @@ public class FileUDPPrimarySend extends Thread {
     public Queue<String> queueToSend;
 
     public FileUDPPrimarySend(String secondaryLocation, int port) {
-        
+
         this.secondaryPort = port;
         this.secondaryLocation = secondaryLocation;
         this.queueToSend = new LinkedList<>();
@@ -58,35 +58,53 @@ public class FileUDPPrimarySend extends Thread {
 
         this.start();
     }
+
     
-    public byte[] calculateMD5Checksum(String path) {
+    private static byte[] generateMD5Checksum(String filename) throws Exception {
+        InputStream fis = new FileInputStream(filename);
 
-        MessageDigest md;
-        try {
-            md = MessageDigest.getInstance("MD5");
+        byte[] buffer = new byte[1024];
+        MessageDigest complete = MessageDigest.getInstance("MD5");
+        int numRead;
 
-            try ( InputStream is = Files.newInputStream(Paths.get("home/" + path));  DigestInputStream dis = new DigestInputStream(is, md)) {
-                /* Read decorated stream (dis) to EOF as normal... */
-            } catch (IOException ex) {
-                Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
+        do {
+            numRead = fis.read(buffer);
+            if (numRead > 0) {
+                complete.update(buffer, 0, numRead);
             }
+        } while (numRead != -1);
 
-            return md.digest();
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        
-        return new byte[16];
+        fis.close();
+        return complete.digest();
     }
 
+    private static String getMD5Checksum(String filename) throws Exception {
+        byte[] b = generateMD5Checksum(filename);
+        String result = "";
 
+        for (int i = 0; i < b.length; i++) {
+            result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        return result;
+    }
+    
+    private static String getMD5Checksum(byte[] checksumBytes) throws Exception {
+        byte[] b = checksumBytes;
+        String result = "";
+
+        for (int i = 0; i < b.length; i++) {
+            result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        return result;
+    }
+
+    
     @Override
     public void run() {
 
         while (true) {
             System.out.println(queueToSend);
-            
+
             // check if empty queue
             if (queueToSend.isEmpty()) {
                 try {
@@ -108,10 +126,6 @@ public class FileUDPPrimarySend extends Thread {
                 System.err.println("Error sending file from primary to secondary: file does not exist.");
                 continue;
             }
-            
-            // calculate file md5 checksum
-            byte[] checksum = calculateMD5Checksum(fileToSend);
-            System.out.println("CHECKSUM: " + checksum.toString());
 
             // send file over above socket
             byte[] buffer = new byte[(int) f.length()];
@@ -129,12 +143,11 @@ public class FileUDPPrimarySend extends Thread {
                 pathBytes = fileToSend.getBytes();
                 DatagramPacket pathPacket = new DatagramPacket(pathBytes, pathBytes.length, this.secondaryLocationAddress, this.secondaryPort);
                 this.udpSendSocket.send(pathPacket);
-                
+
                 // send file
                 bis = new BufferedInputStream(new FileInputStream(f));
                 bis.read(buffer, 0, buffer.length);
 
-                
                 int bytesSent = 0;
                 DatagramPacket filePacket;
                 int lenToRead = 1024;
@@ -143,48 +156,53 @@ public class FileUDPPrimarySend extends Thread {
                     if (buffer.length - bytesSent < 1024) {
                         lenToRead = buffer.length - bytesSent;
                     }
-                    
+
                     filePacket = new DatagramPacket(buffer, bytesSent, lenToRead, this.secondaryLocationAddress, this.secondaryPort);
-                    
+
                     bytesSent += 1024;
                     System.out.println("BYTES SENT: " + Integer.toString(bytesSent));
-                    
+
                     this.udpSendSocket.send(filePacket);
                 }
-                
+
+                // calculate file md5 checksum
+                String generatedChecksum = getMD5Checksum(fileToSend);
+                System.out.println("CHECKSUM: " + generatedChecksum);
+
                 this.udpSendSocket.setSoTimeout(5000);
-                // wait for ACK
-                byte[] ack = new byte [1];
-                DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
-                
+
+                // wait for ACK (in the form of CHECKSUM)
+                byte[] receivedChecksum = new byte[16];
+                DatagramPacket ackPacket = new DatagramPacket(receivedChecksum, receivedChecksum.length);
+
                 // if error, retry
                 this.udpSendSocket.receive(ackPacket);
-                
-                short ackStatus = ByteBuffer.wrap(ack).getShort();
-                
+
+                String checksumString = getMD5Checksum(ackPacket.getData());
+
                 //means there was an error with the packet
-                if(ackStatus == 0){
+                if (!checksumString.equals(generatedChecksum)) {
+                    System.err.println("ERRO CHECKSUM: original = " + generatedChecksum + " ||| recebida = " + checksumString);
                     queueToSend.add(fileToSend);
+                } else {
+
                 }
-                else {
-                    
-                }           
-                
+
                 //Just in case!
                 this.udpSendSocket.setSoTimeout(0);
                 // if error, retry  
                 //queueToSend.add(fileToSend);
-                
+
                 // if timeout on ACK is reached, ... idk
-                
-            }
-             catch (SocketTimeoutException ex) {
+            } catch (SocketTimeoutException ex) {
                 //@TO-DO. IF ACK IS NOT RECEIVED!!
                 System.out.println("TO-DO");
                 Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
-            }catch (FileNotFoundException ex) {
+            } catch (FileNotFoundException ex) {
                 Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
+                Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
                 Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
             }
 
@@ -193,4 +211,3 @@ public class FileUDPPrimarySend extends Thread {
     }
 
 }
-
