@@ -57,7 +57,8 @@ public class FileUDPSecondaryReceive extends Thread {
             DatagramPacket pathBytesPacket = new DatagramPacket(pathBytes, 1024);
 
             try {
-
+                
+                
                 
                 this.udpFileSocket.receive(lenBytesPacket);
                 this.udpFileSocket.receive(pathBytesPacket);
@@ -72,6 +73,17 @@ public class FileUDPSecondaryReceive extends Thread {
                 
                 System.out.println("LENGTH: " + Integer.toString(fileLen));
                 System.out.println("PATH: " + filePath);
+                
+                String[] arr = filePath.split("/");
+                String new_dir = "home2/";
+                
+                for(int i = 0; i < arr.length - 1; i++){
+                    new_dir += arr[i] + "/";
+                }
+                
+                System.out.println(new_dir);
+                File dir= new File(new_dir);
+                dir.mkdir();
 
                 byte[] fileBytes = new byte[fileLen + 1024];
                 byte[] buffer = new byte[1024];
