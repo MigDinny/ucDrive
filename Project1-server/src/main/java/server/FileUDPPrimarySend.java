@@ -118,7 +118,8 @@ public class FileUDPPrimarySend extends Thread {
             System.out.println("Sending: " + queueToSend.peek());
 
             String fileToSend = queueToSend.remove();
-
+            
+            System.out.println("WEHRWEHRWEHRHWHE" + fileToSend);
             // fetch file from system
             File f = new File("home/" + fileToSend);
 
