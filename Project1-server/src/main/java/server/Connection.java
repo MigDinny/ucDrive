@@ -159,7 +159,7 @@ class Connection extends Thread {
                 }
             } else {
                 if (confF.addUser(data_arr[2], data_arr[3], "")) {
-                    this.homeDir = this.homeDir + "/" + confF.getId(data_arr[2]) + "/";
+                    this.homeDir = this.homeDir + "/" + confF.getId(data_arr[2]);
                     this.currentDir = new File(this.homeDir);
                     this.currentDir.mkdir();
                     out.writeBoolean(true);
