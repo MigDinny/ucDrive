@@ -37,7 +37,6 @@ public class FileUDPSecondaryReceive extends Thread {
 
         this.udpFileSocket = new DatagramSocket(serverPort);
 
-        //this.udpFileSocket.setSoTimeout(1000); // timeout de 1 sec
         this.start();
 
     }
@@ -89,10 +88,11 @@ public class FileUDPSecondaryReceive extends Thread {
 
             try {
                 
+                this.udpFileSocket.setSoTimeout(0); // reset timeout
+                this.udpFileSocket.receive(lenBytesPacket); // receive length of the file -- this receive lasts forever until one packet arrives and starts the loop
+                this.udpFileSocket.setSoTimeout(1000); // set timeout to 1 second because if any .receive() timeouts, the loop MUST BE RESETTED
                 
-                
-                this.udpFileSocket.receive(lenBytesPacket);
-                this.udpFileSocket.receive(pathBytesPacket);
+                this.udpFileSocket.receive(pathBytesPacket); // receive path
                 
                 
                 incPort = lenBytesPacket.getPort();
@@ -155,18 +155,17 @@ public class FileUDPSecondaryReceive extends Thread {
                 
 
             } catch (SocketTimeoutException e) {
+                // a receive() timed out, the loop must be resetted and primary server must be informed about this error
+                // send info saying there was an error
                 
                 try{
-                    byte[] ack = ByteBuffer.allocate(1).putShort((short) 0).array();
+                    byte[] ack = ByteBuffer.allocate(16).putShort((short) 0).array();
                     DatagramPacket ackPacket = new DatagramPacket(ack, ack.length);
                     DatagramPacket reply = new DatagramPacket(ackPacket.getData(), ackPacket.getLength(), incAddress, incPort);
                     this.udpFileSocket.send(reply);
                 }catch(IOException ex){
                     Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                // we know that there was something wrong receiving the file, probably
-                
-                // send info saying there was an error
                 
                 continue;
                 

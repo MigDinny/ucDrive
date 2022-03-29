@@ -185,20 +185,18 @@ public class FileUDPPrimarySend extends Thread {
                 if (!checksumString.equals(generatedChecksum)) {
                     System.err.println("ERRO CHECKSUM: original = " + generatedChecksum + " ||| recebida = " + checksumString);
                     queueToSend.add(fileToSend);
-                } else {
-
                 }
 
                 //Just in case!
                 this.udpSendSocket.setSoTimeout(0);
-                // if error, retry  
-                //queueToSend.add(fileToSend);
+                
 
-                // if timeout on ACK is reached, ... idk
             } catch (SocketTimeoutException ex) {
-                //@TO-DO. IF ACK IS NOT RECEIVED!!
-                System.out.println("TO-DO");
-                Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
+                // IF ACK IS NOT RECEIVED!! 
+                System.out.println("ACK CHECKSUM was not received. File was re-added to the queue.");
+                queueToSend.add(fileToSend);
+                
+                //Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {

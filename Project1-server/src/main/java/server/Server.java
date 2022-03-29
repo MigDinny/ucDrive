@@ -64,6 +64,8 @@ public class Server {
             System.out.println("Secondary Server location (localhost): ");
             udpSecondaryLocation = sc.nextLine();
             
+            
+            
 
             udpAnswerPing = new DatagramSocket(serverPortPing);
 
