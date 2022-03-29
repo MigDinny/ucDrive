@@ -1,10 +1,5 @@
 package server;
 
-/**
- *
- * @author Edgar Duarte!
- * @author Miguel Dinis!
- */
 import java.io.File;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,30 +9,34 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.simple.parser.ParseException;
 
-//Creates a connection for each client that tries to connect to the server
+/*
+    Main class Server.
+
+    Initializes the server and accepts incoming client connections.
+ */
 public class Server {
 
     private static int serverPort = 6000; // primary server
     private static int serverPortSecondary = 6001; // secondary server
-    private static int serverPortPing = 6002; // answer ping port primary
-    private static int udpSecondaryPortFileTransfer = 6003; // secondary port open for file transfers
+    private static final int serverPortPing = 6002; // answer ping port primary
+    private static final int udpSecondaryPortFileTransfer = 6003; // secondary port open for file transfers
     private static String udpSecondaryLocation = "localhost";
-    private static String folderName = "home";
-    private static String folderNameSecondary = "home2";
-    private static Scanner sc;
+    private static final String folderName = "home";
+    private static final String folderNameSecondary = "home2";
 
     public static DatagramSocket udpAnswerPing;
     public static DatagramSocket udpSecondarySendPing;
+    private static Scanner sc;
 
+    // initializes the server, makes sure homedir exists
     private static boolean init() {
-
         File folder = new File(folderName);
         if (!folder.exists()) {
             if (folder.mkdir()) {
@@ -51,88 +50,69 @@ public class Server {
         return true;
     }
 
-    private static void runPrimary() {
+    // run primary method -> this is called by the primary server
+    private static void runPrimary() throws IOException, ParseException {
 
         byte[] ping = {(byte) 0x1}; // 0x1 expected value on pings
 
         // open UDP socket in order to answer pings. answer one ping before beginning running primary
         // create thread to answer pings
-        try {
-            System.out.println("Primary Server console port (6000): ");
-            serverPort = Integer.parseInt(sc.nextLine());
-            
-            System.out.println("Secondary Server location (localhost): ");
-            udpSecondaryLocation = sc.nextLine();
-            
-            
-            
+        System.out.println("Primary Server console port (6000): ");
+        serverPort = Integer.parseInt(sc.nextLine());
 
-            udpAnswerPing = new DatagramSocket(serverPortPing);
+        System.out.println("Secondary Server location (localhost): ");
+        udpSecondaryLocation = sc.nextLine();
 
-            DatagramPacket incomingPing = new DatagramPacket(ping, ping.length);
-            udpAnswerPing.receive(incomingPing);
+        udpAnswerPing = new DatagramSocket(serverPortPing);
 
-            System.out.println("Primary received ping: " + Arrays.toString(incomingPing.getData()));
+        DatagramPacket incomingPing = new DatagramPacket(ping, ping.length);
+        udpAnswerPing.receive(incomingPing);
 
-            DatagramPacket reply = new DatagramPacket(incomingPing.getData(), incomingPing.getLength(), incomingPing.getAddress(), incomingPing.getPort());
-            udpAnswerPing.send(reply);
+        System.out.println("Primary received ping: " + Arrays.toString(incomingPing.getData()));
 
-        } catch (SocketException ex) {
-            System.out.println("EFWErf");
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException e) {
-            System.out.println("EFWErf2");
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, e);
-        }
-        
+        DatagramPacket reply = new DatagramPacket(incomingPing.getData(), incomingPing.getLength(), incomingPing.getAddress(), incomingPing.getPort());
+        udpAnswerPing.send(reply);
+
         // open thread to read queue once in T seconds and send the files waiting in queue
         Queue<String> fileQueue = new FileUDPPrimarySend(udpSecondaryLocation, udpSecondaryPortFileTransfer).queueToSend;
-        
-        
+
         // heartbeat controller: answers every ping 
-
-        new HeartbeatController(udpAnswerPing, serverPortPing);
+        new HeartbeatController(udpAnswerPing);
         // accept incoming connections and create threads for them
         int n_thread = 0;
 
         Config confF = new Config();
 
-        try ( ServerSocket listenSocket = new ServerSocket(serverPort)) {
+        ServerSocket listenSocket = new ServerSocket(serverPort);
 
-            while (true) {
-                Socket clientSocket = listenSocket.accept();
-                n_thread++;
-                new Connection(clientSocket, n_thread, fileQueue, confF, folderName);
-            }
-
-        } catch (IOException e) {
-            System.out.println("Listen:" + e.getMessage());
+        while (true) {
+            Socket clientSocket = listenSocket.accept();
+            n_thread++;
+            new Connection(clientSocket, n_thread, fileQueue, confF, folderName);
         }
 
     }
-    
-    private static void runPrimaryThroughSecondary() {
-        
+
+    // run primary through secondary when primary fails -> this is called by the secondary server to act as a primary one
+    private static void runPrimaryThroughSecondary() throws IOException, ParseException {
+
         // accept incoming connections and create threads for them
         int n_thread = 0;
 
         Config confF = new Config();
 
-        try ( ServerSocket listenSocket = new ServerSocket(serverPortSecondary)) {
+        ServerSocket listenSocket = new ServerSocket(serverPortSecondary);
 
-            while (true) {
-                Socket clientSocket = listenSocket.accept();
-                n_thread++;
-                new Connection(clientSocket, n_thread, confF, folderNameSecondary);
-            }
-
-        } catch (IOException e) {
-            System.out.println("Listen:" + e.getMessage());
+        while (true) {
+            Socket clientSocket = listenSocket.accept();
+            n_thread++;
+            new Connection(clientSocket, n_thread, confF, folderNameSecondary);
         }
-        
+
     }
 
-    private static void runSecondary() throws InterruptedException, IOException {
+    // run secondary -> this is called by the secondary
+    private static void runSecondary() throws InterruptedException, IOException, ParseException {
 
         byte[] ping = {(byte) 0x1}; // 0x1 expected value on pings
         DatagramPacket pingPacket;
@@ -142,13 +122,10 @@ public class Server {
         String location = sc.nextLine();
         System.out.println("Secondary Server client console port (6001): ");
         serverPortSecondary = Integer.parseInt(sc.nextLine());
-        
 
-        
         // open thread to receive file copies Primary > Secondary
         new FileUDPSecondaryReceive(udpSecondaryPortFileTransfer);
-        
-        
+
         // heartbeat to the primary server, catching SocketTimeoutException when timeout is reached.
         udpSecondarySendPing = new DatagramSocket();
         udpSecondarySendPing.setSoTimeout(2500);
@@ -167,17 +144,16 @@ public class Server {
                 System.out.println("Secondary: ping round-trip received!");
 
             } catch (SocketTimeoutException e) {
-               
+
                 // socket timeout 
                 System.out.println("Heartbeat failed! Take control of the primary server.");
-                
+
                 // kill FileReceiveThread, and close socket
-                
                 // take control
                 runPrimaryThroughSecondary();
-                
+
                 break;
-                
+
             }
 
             Thread.sleep(2500);
@@ -185,10 +161,13 @@ public class Server {
 
     }
 
+    /*
+    Main method. Initializes the server.
+     */
     public static void main(String[] args) {
 
         if (!init()) {
-            System.err.println("Erro ao inicializar o servidor.");
+            System.err.println("Error initializing the server.");
         }
 
         System.out.println("Role: 0 - Servidor Primário || 1 - Servidor Secundário");
@@ -197,23 +176,20 @@ public class Server {
 
         int op = Integer.parseInt(sc.nextLine());
 
-        if (op == 0) {
-            // servidor primário
-            runPrimary();
-        } else if (op == 1){
-            try {
-                // servidor secundário
-                runSecondary();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        else{
-            System.out.println("Wrong value given");
-        }
+        try {
+            switch (op) {
+                case 0 -> // servidor primário
+                    runPrimary();
+                case 1 -> // servidor secundário
+                    runSecondary();
+                default ->
+                    System.out.println("Wrong value.");
 
+            }
+        } catch (IOException | InterruptedException | ParseException e) {
+            Logger.getLogger(Server.class
+                    .getName()).log(Level.SEVERE, null, e);
+        }
     }
 
 }

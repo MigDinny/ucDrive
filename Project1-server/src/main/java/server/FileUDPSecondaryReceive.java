@@ -1,18 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package server;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketTimeoutException;
@@ -24,24 +17,28 @@ import java.util.logging.Logger;
 import java.net.InetAddress;
 import java.security.MessageDigest;
 
-/**
- *
- * @author Miguel
- * @coauthor Edgar
- */
+/*
+This class runs a thread to receive files from primary server. 
+
+It also calculates the checksum to send to the primary server so it can be checked.
+*/
 public class FileUDPSecondaryReceive extends Thread {
 
-    private static DatagramSocket udpFileSocket;
+    private DatagramSocket udpFileSocket;
 
+    /*
+    Constructor
+    
+    Takes a port to listen on.
+    */
     public FileUDPSecondaryReceive(int serverPort) throws InterruptedException, IOException {
 
         this.udpFileSocket = new DatagramSocket(serverPort);
 
         this.start();
-
     }
 
-
+    // generates MD5 hash (checksum) given a filename, returning a bytearray
     private static byte[] generateMD5Checksum(String filename) throws Exception {
         InputStream fis = new FileInputStream(filename);
         byte[] buffer = new byte[1024];
@@ -59,6 +56,7 @@ public class FileUDPSecondaryReceive extends Thread {
         return complete.digest();
     }
 
+    // generates MD5 hash (checksum) given a filename, returning a string
     private static String getMD5Checksum(String filename) throws Exception {
         
         byte[] b = generateMD5Checksum(filename);
@@ -71,7 +69,7 @@ public class FileUDPSecondaryReceive extends Thread {
     }
 
 
-
+    // infinite loop to receive incoming files
     public void run() {
 
         do {
@@ -172,7 +170,6 @@ public class FileUDPSecondaryReceive extends Thread {
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
-                System.out.println("HERE");
                 Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);
             } catch (Exception ex) {
                 Logger.getLogger(FileUDPSecondaryReceive.class.getName()).log(Level.SEVERE, null, ex);

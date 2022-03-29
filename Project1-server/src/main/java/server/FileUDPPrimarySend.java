@@ -16,19 +16,17 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Stack;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.security.NoSuchAlgorithmException;
 
-/**
- *
- * @author Miguel
- * @coauthor Edgar
+
+/*
+This class runs a Thread to read a file queue syncronizedly and it sends each file on that queue to the secondary server.
+
+It also implements an error-detection system using ACK packets with checksums.
+
+When a file is not correctly sent to the secondary server, it goes to the end of the queue to be sent, eventually, again.
  */
 public class FileUDPPrimarySend extends Thread {
 
@@ -38,29 +36,26 @@ public class FileUDPPrimarySend extends Thread {
     private DatagramSocket udpSendSocket;
     public Queue<String> queueToSend;
 
-    public FileUDPPrimarySend(String secondaryLocation, int port) {
+    /*
+    Constructor
+    
+    Takes secondary server location and port.
+    */
+    public FileUDPPrimarySend(String secondaryLocation, int port) throws UnknownHostException, SocketException {
 
         this.secondaryPort = port;
         this.secondaryLocation = secondaryLocation;
         this.queueToSend = new LinkedList<>();
 
-        try {
-            this.secondaryLocationAddress = InetAddress.getByName(this.secondaryLocation);
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.secondaryLocationAddress = InetAddress.getByName(this.secondaryLocation);
 
-        try {
-            this.udpSendSocket = new DatagramSocket();
-        } catch (SocketException ex) {
-            Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.udpSendSocket = new DatagramSocket();
 
         this.start();
     }
 
-    
-    private static byte[] generateMD5Checksum(String filename) throws Exception {
+    // generates MD5 hash (checksum) given a filename, returning a bytearray
+    private static byte[] generateMD5Checksum(String filename) throws FileNotFoundException, NoSuchAlgorithmException, IOException {
         InputStream fis = new FileInputStream(filename);
 
         byte[] buffer = new byte[1024];
@@ -78,6 +73,7 @@ public class FileUDPPrimarySend extends Thread {
         return complete.digest();
     }
 
+    // generates MD5 hash (checksum) given a filename returning a string
     private static String getMD5Checksum(String filename) throws Exception {
         byte[] b = generateMD5Checksum(filename);
         String result = "";
@@ -88,6 +84,7 @@ public class FileUDPPrimarySend extends Thread {
         return result;
     }
     
+    // takes an md5 hash in bytearray form and returns a string
     private static String getMD5Checksum(byte[] checksumBytes) throws Exception {
         byte[] b = checksumBytes;
         String result = "";
@@ -98,7 +95,6 @@ public class FileUDPPrimarySend extends Thread {
         return result;
     }
 
-    
     @Override
     public void run() {
 
@@ -118,7 +114,6 @@ public class FileUDPPrimarySend extends Thread {
             System.out.println("Sending: " + queueToSend.peek());
 
             String fileToSend = queueToSend.remove();
-            
 
             // fetch file from system
             File f = new File("home/" + fileToSend);
@@ -189,13 +184,12 @@ public class FileUDPPrimarySend extends Thread {
 
                 //Just in case!
                 this.udpSendSocket.setSoTimeout(0);
-                
 
             } catch (SocketTimeoutException ex) {
                 // IF ACK IS NOT RECEIVED!! 
                 System.out.println("ACK CHECKSUM was not received. File was re-added to the queue.");
                 queueToSend.add(fileToSend);
-                
+
                 //Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(FileUDPPrimarySend.class.getName()).log(Level.SEVERE, null, ex);

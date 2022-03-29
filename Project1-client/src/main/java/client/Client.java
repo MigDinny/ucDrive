@@ -10,17 +10,11 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-/**
- *
- * @author Edgar Duarte
- * @author Miguel Dinis
- */
 public class Client {
 
     private static int port1;
@@ -34,8 +28,8 @@ public class Client {
     private static Scanner sc;
     private static String current_dir;
 
-    //Authenticates user
-    public static void auth() {
+    // authenticates user
+    private static void auth() throws IOException {
 
         while (true) {
             try {
@@ -67,29 +61,26 @@ public class Client {
 
             } catch (NumberFormatException e) {
                 System.out.println("Please introduce correct input values");
-            } catch (IOException e) {
-                System.out.println("IO " + e);
-            } catch (Exception e) {
-                System.out.println("Something went wrong, please try again");
             }
         }
     }
 
-    //Lets user change password
-    public static void changePassword() throws IOException {
+    // asks for new password
+    private static void changePassword() throws IOException {
 
         System.out.println("New password: ");
         String password = sc.nextLine();
 
-	 String message = "2#" + username + "#" + password;
+        String message = "2#" + username + "#" + password;
         out.writeUTF(message);
-        
+
         System.out.println("Please authenticate again!");
         auth();
 
     }
 
-    public static void listServerFiles() throws IOException {
+    // sends request to server asking for an LS
+    private static void listServerFiles() throws IOException {
 
         String message = "4";
         out.writeUTF(message);
@@ -102,7 +93,8 @@ public class Client {
 
     }
 
-    public static void changeDirServer() throws IOException {
+    // sends request to server asking to change remote directory
+    private static void changeDirServer() throws IOException {
 
         System.out.println("Select a dir to go to: ");
         String new_dir = sc.nextLine();
@@ -112,8 +104,9 @@ public class Client {
 
     }
 
-    //From https://stackoverflow.com/questions/5694385/getting-the-filenames-of-all-files-in-a-folder
-    public static void listLocalFiles() {
+    // lists local files
+    // from https://stackoverflow.com/questions/5694385/getting-the-filenames-of-all-files-in-a-folder
+    private static void listLocalFiles() {
 
         System.out.println("CURRENT DIR     " + current_dir);
         File folder = new File(current_dir);
@@ -129,7 +122,8 @@ public class Client {
 
     }
 
-    public static void changeDirLocal() {
+    // changes local directory
+    private static void changeDirLocal() {
 
         System.out.println("Select a dir to go to: ");
         String path = sc.nextLine();
@@ -157,7 +151,8 @@ public class Client {
 
     }
 
-    public static void downloadFileServer() throws IOException {
+    // downloads file from server
+    private static void downloadFileServer() throws IOException {
 
         System.out.println("File to download: ");
         String filename = sc.nextLine();
@@ -172,42 +167,36 @@ public class Client {
 
             System.out.println(port);
 
-            try ( Socket s2 = new Socket(host1, port)) {
+            Socket s2 = new Socket(host1, port);
 
-                // expect a file here, read and save
-                byte[] buffer = new byte[8192];
+            // expect a file here, read and save
+            byte[] buffer = new byte[8192];
 
-                InputStream is = s2.getInputStream();
+            InputStream is = s2.getInputStream();
 
-                FileOutputStream fos = new FileOutputStream(current_dir + "/" + filename);
-                BufferedOutputStream bos = new BufferedOutputStream(fos);
+            FileOutputStream fos = new FileOutputStream(current_dir + "/" + filename);
+            BufferedOutputStream bos = new BufferedOutputStream(fos);
 
-                int bytesRead = is.read(buffer, 0, buffer.length);
+            int bytesRead = is.read(buffer, 0, buffer.length);
 
-                while (bytesRead != -1) {
-                    //System.out.println("Bytes read: " + bytesRead);
-                    bos.write(buffer, 0, bytesRead);
-                    bos.flush();
-                    bytesRead = is.read(buffer, 0, buffer.length);
-                }
-
-                bos.close();
-                s2.close();
-
-            } catch (UnknownHostException e) {
-                System.out.println("Sock:" + e.getMessage());
-            } catch (EOFException e) {
-                System.out.println("EOF:" + e.getMessage());
-            } catch (IOException e) {
-                System.out.println("IO:" + e.getMessage());
+            while (bytesRead != -1) {
+                //System.out.println("Bytes read: " + bytesRead);
+                bos.write(buffer, 0, bytesRead);
+                bos.flush();
+                bytesRead = is.read(buffer, 0, buffer.length);
             }
+
+            bos.close();
+            s2.close();
+
         } else {
             System.out.println("Connection refused or invalid file given");
         }
 
     }
 
-    public static void uploadFileServer() throws IOException {
+    // uploads file to server
+    private static void uploadFileServer() throws IOException {
         System.out.println("File to upload: ");
         String filename = sc.nextLine();
 
@@ -225,33 +214,24 @@ public class Client {
 
         System.out.println(port);
 
-        try ( Socket s2 = new Socket(host1, port)) {
+        Socket s2 = new Socket(host1, port);
 
-            // send file over above socket
-            byte[] buffer = new byte[(int) f.length()];
+        // send file over above socket
+        byte[] buffer = new byte[(int) f.length()];
 
-            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
-            bis.read(buffer, 0, buffer.length);
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
+        bis.read(buffer, 0, buffer.length);
 
-            OutputStream os = s2.getOutputStream();
-            os.write(buffer, 0, buffer.length);
+        OutputStream os = s2.getOutputStream();
+        os.write(buffer, 0, buffer.length);
 
-            os.flush();
+        os.flush();
 
-            s2.close();
+        s2.close();
 
-        } catch (UnknownHostException e) {
-            System.out.println("Sock:" + e.getMessage());
-        } catch (EOFException e) {
-            System.out.println("EOF:" + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("IO:" + e.getMessage());
-        }
+    }
 
-    
-}
-
-public static void help() {
+    private static void help() {
         System.out.println("-----Help------");
         System.out.println("chg pass - Change password");
         System.out.println("conf ports - Configure ports");
@@ -264,8 +244,8 @@ public static void help() {
         System.out.println("exit - Exit app");
     }
 
-//User picks next action
-    public static void menu() throws IOException {
+    // user chooses next action
+    private static void menu() throws IOException {
 
         while (true) {
             try {
@@ -334,12 +314,6 @@ public static void help() {
 
             } catch (NumberFormatException e) {
                 System.out.println("Please introduce correct input values");
-            } catch (IOException e){
-                if(e instanceof java.net.SocketException){
-                    throw new IOException("Server 1 died! Attempting to connect to backup server!");
-                }
-                
-                System.out.println("IO:" + e);
             }
         }
     }
@@ -353,14 +327,13 @@ public static void help() {
         }
 
         try {
-            
+
             Scanner sc = new Scanner(System.in);
-            
+
             host1 = args[0];
             port1 = Integer.parseInt(args[1]);
             host2 = args[2];
             port2 = Integer.parseInt(args[3]);
-            
 
         } catch (Exception e) {
             System.out.println(e);
@@ -388,16 +361,17 @@ public static void help() {
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("Primary server disconnected. Attempting reconnect to secondary server...");
+
             try ( Socket s = new Socket(host2, port2)) {
 
                 current_dir = System.getProperty("user.dir");
- 
+
                 in = new DataInputStream(s.getInputStream());
                 out = new DataOutputStream(s.getOutputStream());
 
                 sc = new Scanner(System.in);
-                
+
                 System.out.println("Successfully connected to server 2! Please authenticate again!");
                 auth();
 
