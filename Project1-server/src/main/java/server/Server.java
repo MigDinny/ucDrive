@@ -80,8 +80,14 @@ public class Server {
         new HeartbeatController(udpAnswerPing);
         // accept incoming connections and create threads for them
         int n_thread = 0;
-
-        Config confF = new Config();
+        
+        Config confF = null;
+        try {
+            confF = new Config();
+        }  catch (ParseException e) {
+            System.out.println("Warning: conf.json empty");
+        }
+        
 
         ServerSocket listenSocket = new ServerSocket(serverPort);
 

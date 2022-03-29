@@ -25,7 +25,7 @@ class Config {
      */
     public Config() throws IOException, ParseException {
         JSONParser jsonParser = new JSONParser();
-        Object obj = null;
+        Object obj = new JSONArray();
 
         // try parse
         try {
@@ -37,6 +37,8 @@ class Config {
 
             FileReader reader = new FileReader(filename);
             obj = jsonParser.parse(reader);
+        } catch (ParseException e) {
+            System.out.println("Warning: conf.json empty");
         }
 
         users = (JSONArray) obj;

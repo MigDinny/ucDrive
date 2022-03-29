@@ -361,6 +361,7 @@ public class Client {
         } catch (EOFException e) {
             System.out.println("EOF:" + e.getMessage());
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Primary server disconnected. Attempting reconnect to secondary server...");
 
             try ( Socket s = new Socket(host2, port2)) {

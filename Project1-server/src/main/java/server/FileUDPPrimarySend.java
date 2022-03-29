@@ -99,7 +99,7 @@ public class FileUDPPrimarySend extends Thread {
     public void run() {
 
         while (true) {
-            System.out.println(queueToSend);
+            //System.out.println(queueToSend);
 
             // check if empty queue
             if (queueToSend.isEmpty()) {
