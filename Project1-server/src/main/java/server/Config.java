@@ -1,5 +1,6 @@
 package server;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -9,46 +10,61 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-/**
- *
- * @author Edgar
+/*
+Class Config
+    
+Loads, handles and manages server's configurations.
  */
 class Config {
 
-    public volatile JSONArray user_list = new JSONArray();
+    private volatile JSONArray users = new JSONArray();
+    private final String filename = "conf.json";
 
-    public Config() {
+    /*    
+    Reads and parses config file.
+     */
+    public Config() throws IOException, ParseException {
         JSONParser jsonParser = new JSONParser();
+        Object obj = null;
 
-        try (FileReader reader = new FileReader("conf.json")) {
-            //Read JSON file
-            Object obj = jsonParser.parse(reader);
+        // try parse
+        try {
+            FileReader reader = new FileReader(filename);
+            obj = jsonParser.parse(reader);
+        } catch (FileNotFoundException fe) {
+            File conf = new File(filename);
+            conf.createNewFile();
 
-            user_list = (JSONArray) obj;
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
+            FileReader reader = new FileReader(filename);
+            obj = jsonParser.parse(reader);
         }
+
+        users = (JSONArray) obj;
     }
 
-    public JSONArray getUser_list() {
-        return user_list;
+    /*
+    Returns JSONArray object containing all users and their info.
+     */
+    public JSONArray getUsers() {
+        return users;
     }
 
-    public void setUser_list(JSONArray user_list) {
-        this.user_list = user_list;
+    /*
+    Sets JSONArray object containing all users and their info.
+     */
+    public void setUsers(JSONArray users) {
+        this.users = users;
     }
 
-    //Returns true if there is a user and a password that fit.
-    //TODO MAKE SURE THAT PASSWORD IS ENCRYPTED
+    /*
+    Authenticates a client.
+    TO-DO: encrypt password.
+    Returns true if succeeded and false otherwise.
+     */
     public boolean auth(String username, String password) {
 
-        for (int i = 0; i < user_list.size(); i++) {
-            JSONObject user = (JSONObject) user_list.get(i);
+        for (int i = 0; i < users.size(); i++) {
+            JSONObject user = (JSONObject) users.get(i);
 
             if (user.get("username").equals(username) && user.get("password").equals(password)) {
                 return true;
@@ -56,61 +72,70 @@ class Config {
         }
         return false;
     }
-    
-    public int getId(String username){
-        
-        for (int i = 0; i < user_list.size(); i++) {
-            JSONObject user = (JSONObject) user_list.get(i);
+
+    /*
+    Returns a user ID given the username.
+    Returns -1 if not found any user with given username.
+     */
+    public int getId(String username) {
+
+        for (int i = 0; i < users.size(); i++) {
+            JSONObject user = (JSONObject) users.get(i);
             if (user.get("username").equals(username)) {
                 return Integer.parseInt(user.get("id").toString());
             }
         }
-        
+
         return -1;
     }
 
-    //Adds user to configuration file
-    //Returns false if a user with the same user name exists. Returns true if user was sucessfully added
-    synchronized boolean addUser(String username, String password, String dir) {
+    /*
+    Adds a user to the configuration file.
+    Returns true if succeeded, false if there is already a user with given username.
+     */
+    synchronized boolean addUser(String username, String password, String dir) throws IOException {
         JSONObject json_user = new JSONObject();
 
-        for (int i = 0; i < user_list.size(); i++) {
-            JSONObject user = (JSONObject) user_list.get(i);
+        for (int i = 0; i < users.size(); i++) {
+            JSONObject user = (JSONObject) users.get(i);
             if (user.get("username").equals(username)) {
                 return false;
             }
         }
-        
+
         json_user.put("username", username);
         json_user.put("password", password);
         json_user.put("dir", dir);
-        json_user.put("id", GetNewId());
+        json_user.put("id", getNewID());
 
-        user_list.add(json_user);
+        users.add(json_user);
 
         writeToFile();
 
         return true;
 
     }
-    
-    int GetNewId(){
+
+    // gets the next assignable ID
+    private int getNewID() {
         int j = 1;
-        for(int i = 0; i < user_list.size(); i++){
-            JSONObject user = (JSONObject) user_list.get(i);
+        for (int i = 0; i < users.size(); i++) {
+            JSONObject user = (JSONObject) users.get(i);
             int aux = Integer.parseInt(user.get("id").toString());
-            
-            if(aux >= j){
-                j = aux +1; 
+
+            if (aux >= j) {
+                j = aux + 1;
             }
         }
         return j;
     }
 
-    //updates the password of a user
-    synchronized void updatePassword(String username, String new_password) {
-        for (int i = 0; i < user_list.size(); i++) {
-            JSONObject user = (JSONObject) user_list.get(i);
+    /*
+    Updates the password of a given user.
+     */
+    public synchronized void updatePassword(String username, String new_password) throws IOException {
+        for (int i = 0; i < users.size(); i++) {
+            JSONObject user = (JSONObject) users.get(i);
 
             if (user.get("username").equals(username)) {
                 user.put("password", new_password);
@@ -119,41 +144,43 @@ class Config {
         writeToFile();
 
     }
-    
-    
-    synchronized void writeToFile() {
-        try (FileWriter file = new FileWriter("conf.json")) {
-            //We can write any JSONArray or JSONObject instance to the file
-            file.write(user_list.toJSONString());
-            file.flush();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    // Flushes the JSON array to the disk file
+    private synchronized void writeToFile() throws IOException {
+        FileWriter file = new FileWriter(filename);
+        //We can write any JSONArray or JSONObject instance to the file
+        file.write(users.toJSONString());
+        file.flush();
+        file.close();
     }
-    
-    synchronized void changeDir(String username, String new_directory){
-        for (int i = 0; i < user_list.size(); i++){
-            JSONObject user = (JSONObject) user_list.get(i);
-            
-            if(user.get("username").equals(username)){
+
+    /*
+    Changes the user's remote directory on the config file, so it is later remembered. 
+     */
+    public synchronized void changeDir(String username, String new_directory) throws IOException {
+        for (int i = 0; i < users.size(); i++) {
+            JSONObject user = (JSONObject) users.get(i);
+
+            if (user.get("username").equals(username)) {
                 user.put("dir", new_directory);
             }
         }
         writeToFile();
     }
-    
-    
-    synchronized String getDir(String username){
-        for(int i = 0; i < user_list.size(); i++){
-            JSONObject user = (JSONObject) user_list.get(i);
-            
-            if(user.get("username").equals(username)){
+
+    /*
+    Returns the path of the user's remote directory retrieved from the config file.
+    Returns "-1" if user doesn't exist.
+     */
+    synchronized String getDir(String username) {
+        for (int i = 0; i < users.size(); i++) {
+            JSONObject user = (JSONObject) users.get(i);
+
+            if (user.get("username").equals(username)) {
                 return user.get("dir").toString();
             }
         }
-        
+
         return "-1";
-        
     }
 }
