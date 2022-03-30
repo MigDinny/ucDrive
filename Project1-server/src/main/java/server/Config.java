@@ -35,10 +35,12 @@ class Config {
             File conf = new File(filename);
             conf.createNewFile();
 
+            FileWriter myWriter = new FileWriter(filename);
+            myWriter.write("[]");
+            myWriter.close();
+
             FileReader reader = new FileReader(filename);
             obj = jsonParser.parse(reader);
-        } catch (ParseException e) {
-            System.out.println("Warning: conf.json empty");
         }
 
         users = (JSONArray) obj;
@@ -67,7 +69,7 @@ class Config {
 
         for (int i = 0; i < users.size(); i++) {
             JSONObject user = (JSONObject) users.get(i);
-
+            
             if (user.get("username").equals(username) && user.get("password").equals(password)) {
                 return true;
             }

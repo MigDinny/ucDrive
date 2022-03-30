@@ -38,13 +38,17 @@ public class Server {
     // initializes the server, makes sure homedir exists
     private static boolean init() {
         File folder = new File(folderName);
+        File folder2 = new File(folderNameSecondary);
         if (!folder.exists()) {
             if (folder.mkdir()) {
                 System.out.println("Folder " + folderName + " created.");
-                return true;
-            } else {
-                return false;
-            }
+            } else return false;
+        }
+        
+        if (!folder2.exists()) {
+            if (folder2.mkdir()) {
+                System.out.println("Folder " + folderNameSecondary + " created.");
+            } else return false;
         }
 
         return true;
@@ -174,6 +178,7 @@ public class Server {
 
         if (!init()) {
             System.err.println("Error initializing the server.");
+            return;
         }
 
         System.out.println("Role: 0 - Servidor Primário || 1 - Servidor Secundário");

@@ -155,6 +155,7 @@ class Connection extends Thread {
                     }
                     this.homeDir = this.homeDir + "/" + confF.getId(data_arr[2]);
                     this.currentDir = new File(joinPath(this.path));
+                    this.currentDir.mkdir();
 
                 } else {
                     out.writeBoolean(false);
