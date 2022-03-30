@@ -234,7 +234,7 @@ public class Client {
     private static void help() {
         System.out.println("-----Help------");
         System.out.println("chg pass - Change password");
-        System.out.println("conf ports - Configure ports");
+        //System.out.println("conf ports - Configure ports");
         System.out.println("ls server - List files server side");
         System.out.println("ls - List files client side");
         System.out.println("cd server- Change server dir");
