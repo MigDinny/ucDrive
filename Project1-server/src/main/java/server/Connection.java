@@ -144,13 +144,13 @@ class Connection extends Thread {
                     String dir_path_arr[] = dir.split("/");
 
                     //ignore home/
-                    boolean first = true;
+                    int home_dir_ign = 0;
 
                     for (String s : dir_path_arr) {
-                        if (!first) {
+                        if (home_dir_ign >= 2) {
                             this.path.push(s);
                         }
-                        first = false;
+                        home_dir_ign += 1;
 
                     }
                     this.homeDir = this.homeDir + "/" + confF.getId(data_arr[2]);
