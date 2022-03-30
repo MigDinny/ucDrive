@@ -108,11 +108,12 @@ public class FileUDPSecondaryReceive extends Thread {
                 
                 for(int i = 0; i < arr.length - 1; i++){
                     new_dir += arr[i] + "/";
+                    File dir= new File(new_dir);
+                    dir.mkdir();
                 }
                 
                 System.out.println(new_dir);
-                File dir= new File(new_dir);
-                dir.mkdir();
+                
 
                 byte[] fileBytes = new byte[fileLen + 1024];
                 byte[] buffer = new byte[1024];
